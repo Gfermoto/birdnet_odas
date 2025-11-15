@@ -1,0 +1,72 @@
+# Секреты и конфигурация
+*.env
+*.key
+*.pem
+*.secret
+*.token
+.env.local
+.env.*.local
+config/secrets.yaml
+config/secrets.yml
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.temp
+logs/
+tmp/
+temp/
+
+# Данные BirdNET-Go
+birdnet-results/
+data/
+*.wav
+*.mp3
+*.flac
+*.csv
+*.json
+!package.json
+!package-lock.json
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Docker
+docker-compose.override.yml
+
+# Backup файлы
+*.bak
+*.backup
+*.tar.gz
+*.zip
+
+# Тестовые файлы
+test_*.wav
+test_*.mp3
+field_test.wav
+spectrogram.png
+
+# Установочные скрипты (если содержат чувствительные данные)
+# install.sh - оставляем, так как это публичный скрипт
+
+# Локальные настройки
+local_settings.py
+local_config.json
+
