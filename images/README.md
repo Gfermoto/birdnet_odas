@@ -14,6 +14,8 @@
 
 ![Устройство - вид 6](photo_6.jpg)
 
+![Устройство - вид 7](photo_8.jpg)
+
 ## BirdNET-Go Dashboard
 
 ![Скриншот BirdNET-Go](photo_7.jpg)
