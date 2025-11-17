@@ -66,8 +66,13 @@ birdnet_odas/
 │   └── respeaker_usb4mic_setup.md # Настройка ReSpeaker
 ├── images/                        # Фотографии устройства и скриншоты
 │   └── README.md                  # Галерея изображений
-└── scripts/                       # Утилиты и скрипты
-    └── setup_nanopi.sh            # Автоматическая установка
+└── scripts/                        # Утилиты и скрипты
+    ├── README.md                  # Описание всех скриптов
+    ├── setup_nanopi.sh            # Автоматическая установка
+    ├── respeaker-tune.sh           # Настройка DSP ReSpeaker
+    ├── respeaker_loopback.sh      # Передача аудио через loopback
+    ├── check_audio_devices.sh     # Проверка аудио устройств
+    └── fix_birdnet_device.sh      # Проверка устройства после загрузки
 ```
 
 ---

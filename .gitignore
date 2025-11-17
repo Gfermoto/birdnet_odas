@@ -16,6 +16,7 @@ config/secrets.yml
 logs/
 tmp/
 temp/
+/temp/
 
 # Данные BirdNET-Go
 birdnet-results/
