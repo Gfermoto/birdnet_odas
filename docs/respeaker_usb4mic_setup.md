@@ -292,7 +292,7 @@ aplay -D plughw:ArrayUAC10,0 -f S16_LE -r 16000 -c 1 test_all_channels.wav
 apt-get install -y sox python3-scipy python3-numpy
 echo "snd-aloop" > /etc/modules-load.d/snd-aloop.conf
 # Переименование карты для различения устройств в BirdNET-Go
-echo "options snd-aloop id=LoopbackRespeaker index=2" > /etc/modprobe.d/snd-aloop.conf
+echo "options snd-aloop id=ACapture index=2" > /etc/modprobe.d/snd-aloop.conf
 modprobe snd-aloop
 
 # 2. Скопировать Log-MMSE процессор
@@ -307,7 +307,7 @@ while true; do
     arecord -D hw:ArrayUAC10,0 -f S16_LE -r 16000 -c 6 -t raw 2>/dev/null | \
     python3 /usr/local/bin/log_mmse_processor.py | \
     sox -t raw -r 16000 -c 1 -e signed-integer -b 16 -L - \
-        -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - | \
+        -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - gain -2.0 | \
     aplay -D hw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw 2>/dev/null || sleep 1
 done
 EOF
@@ -316,7 +316,7 @@ chmod +x /usr/local/bin/respeaker_loopback.sh
 # 4. Создать systemd сервис
 cat > /etc/systemd/system/respeaker-loopback.service << 'EOF'
 [Unit]
-Description=ReSpeaker to ALSA Loopback via Log-MMSE and SoX
+Description=ReSpeaker Audio Pipeline with Log-MMSE and SoX
 After=sound.target
 Wants=sound.target
 
@@ -324,7 +324,9 @@ Wants=sound.target
 Type=simple
 ExecStart=/usr/local/bin/respeaker_loopback.sh
 Restart=always
-RestartSec=2
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -505,7 +507,57 @@ python3 tuning.py AGCMAXGAIN
 - Онлайн-магазины (AliExpress, Amazon)
 - Универсальные ветрозащиты для USB-микрофонов
 
-#### 2. Ферритовый фильтр на кабель питания
+#### 2. Электромагнитные помехи от ЛЭП (высоковольтных линий)
+
+**Проблема:** Низкочастотный гул от высоковольтных линий электропередачи (ЛЭП)
+
+**Характеристики помех от ЛЭП:**
+- **Частота сети:** 50 Гц (Россия) или 60 Гц
+- **Гармоники:** 100 Гц, 150 Гц, 200 Гц, 250 Гц...
+- **Типичные проявления:**
+  - Низкочастотный гул (50/60 Гц и гармоники)
+  - Пики в спектре на 50, 100, 150, 200 Гц
+  - Высокий уровень шума в диапазоне 50-500 Гц
+  - Наводки на кабели (особенно незаземленные)
+
+**Пример из анализа спектра:**
+- Пик на **93.8 Гц при -56.4 дБ** может быть связан с ЛЭП
+- 93.8 Гц ≈ 2-я гармоника 50 Гц (100 Гц) с небольшим отклонением
+- Высокий уровень шума до 200 Гц типичен для ЛЭП 110 кВ
+
+**Защита от ЛЭП:**
+
+1. **Заземление микрофона** ✅ (уже реализовано)
+   - Критически важно для подавления наводок
+   - Обеспечивает безопасность и снижает помехи
+
+2. **Ферритовый фильтр на USB-кабель** ⚠️ (рекомендуется)
+   - Установить ферритовый фильтр (ferrite bead/choke) на USB-кабель
+   - Фильтр должен быть как можно ближе к микрофону
+   - Подавляет высокочастотные электромагнитные помехи и гармоники
+   - **Типы:** Защелкивающиеся (snap-on) или встроенные в кабель
+
+3. **Экранированный USB-кабель** ⚠️ (рекомендуется)
+   - Использовать качественный экранированный USB-кабель
+   - Экранирование снижает наводки от электромагнитного поля ЛЭП
+
+4. **Прокладка кабеля** ⚠️ (важно)
+   - Избегать прокладки кабеля параллельно ЛЭП
+   - Прокладывать кабель перпендикулярно к ЛЭП (если возможно)
+   - Минимизировать длину кабеля
+
+5. **Log-MMSE шумоподавление** ✅ (уже реализовано)
+   - HPF на 180 Гц (микрофон) подавляет 50/60 Гц и первые гармоники
+   - HPF на 300 Гц (BirdNET-Go) дополнительно подавляет гармоники до 300 Гц
+   - Log-MMSE эффективно подавляет стационарный шум от ЛЭП
+   - См. [audio_pipeline.md](audio_pipeline.md) для подробностей
+
+**Где приобрести ферритовые фильтры:**
+- Радиомагазины
+- Онлайн-магазины (AliExpress, eBay)
+- Искать "ferrite bead USB" или "ferrite choke USB"
+
+#### 3. Ферритовый фильтр на кабель питания
 
 **Проблема:** Электромагнитные помехи от блока питания, наводки по USB-кабелю
 
@@ -523,12 +575,12 @@ python3 tuning.py AGCMAXGAIN
 - Онлайн-магазины (AliExpress, eBay)
 - Искать "ferrite bead USB" или "ferrite choke USB"
 
-#### 3. Дополнительные рекомендации
+#### 4. Дополнительные рекомендации
 
 - Использовать качественный экранированный USB-кабель
 - Избегать прокладки кабеля рядом с источниками помех (блоки питания, трансформаторы)
 - Использовать отдельный USB-порт, не через USB-хаб
-- Проверить заземление системы (если возможно)
+- Проверить заземление системы (критично для ЛЭП)
 
 ---
 

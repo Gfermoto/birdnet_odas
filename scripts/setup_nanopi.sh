@@ -124,6 +124,73 @@ EOF
     sudo apt-get install -y python3-usb python3-click || python3 -m pip install --break-system-packages pyusb click
     
     print_success "ReSpeaker готов к настройке DSP (см. respeaker_usb4mic_setup.md)"
+    
+    # Настройка Log-MMSE пайплайна
+    print_info "Настройка Log-MMSE пайплайна..."
+    
+    # Установка зависимостей для Log-MMSE
+    sudo apt-get install -y python3-scipy python3-numpy sox
+    
+    # Настройка ALSA loopback
+    echo "snd-aloop" | sudo tee /etc/modules-load.d/snd-aloop.conf >/dev/null
+    echo "options snd-aloop id=ACapture index=2" | sudo tee /etc/modprobe.d/snd-aloop.conf >/dev/null
+    sudo modprobe snd-aloop
+    
+    # Копирование Log-MMSE процессора
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [[ -f "$SCRIPT_DIR/log_mmse_processor.py" ]]; then
+        sudo cp "$SCRIPT_DIR/log_mmse_processor.py" /usr/local/bin/
+        sudo chmod +x /usr/local/bin/log_mmse_processor.py
+        print_success "Log-MMSE процессор установлен"
+    else
+        print_warning "log_mmse_processor.py не найден в $SCRIPT_DIR"
+        print_info "Скопируйте его вручную: cp scripts/log_mmse_processor.py /usr/local/bin/"
+    fi
+    
+    # Создание скрипта respeaker_loopback.sh
+    if [[ -f "$SCRIPT_DIR/respeaker_loopback.sh" ]]; then
+        sudo cp "$SCRIPT_DIR/respeaker_loopback.sh" /usr/local/bin/
+        sudo chmod +x /usr/local/bin/respeaker_loopback.sh
+        print_success "Скрипт respeaker_loopback.sh установлен"
+    else
+        print_warning "respeaker_loopback.sh не найден, создаю из шаблона..."
+        sudo tee /usr/local/bin/respeaker_loopback.sh >/dev/null <<'EOF'
+#!/bin/bash
+# Скрипт для передачи ReSpeaker через Log-MMSE и SoX в ALSA loopback
+while true; do
+    arecord -D hw:ArrayUAC10,0 -f S16_LE -r 16000 -c 6 -t raw 2>/dev/null | \
+    python3 /usr/local/bin/log_mmse_processor.py | \
+    sox -t raw -r 16000 -c 1 -e signed-integer -b 16 -L - \
+        -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - gain -2.0 | \
+    aplay -D hw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw 2>/dev/null || sleep 1
+done
+EOF
+        sudo chmod +x /usr/local/bin/respeaker_loopback.sh
+    fi
+    
+    # Создание systemd сервиса
+    sudo tee /etc/systemd/system/respeaker-loopback.service >/dev/null <<'EOF'
+[Unit]
+Description=ReSpeaker Audio Pipeline with Log-MMSE and SoX
+After=sound.target
+Wants=sound.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/respeaker_loopback.sh
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    sudo systemctl daemon-reload
+    sudo systemctl enable respeaker-loopback.service
+    print_success "Systemd сервис respeaker-loopback.service создан и включен"
+    print_info "Сервис будет запущен после перезагрузки или вручную: sudo systemctl start respeaker-loopback.service"
 else
     print_info "ReSpeaker USB не обнаружен (пропуск)"
 fi
@@ -174,9 +241,16 @@ echo
 echo "1. Перелогиньтесь для применения группы docker"
 echo "2. Откройте Web GUI: http://$(hostname -I | awk '{print $1}'):8080"
 echo "3. Настройте координаты и confidence в Settings"
-echo "4. Проверка микрофона: ~/test_mic.sh"
-echo "5. Управление:"
+if lsusb | grep -qi "seeed"; then
+    echo "4. ReSpeaker обнаружен:"
+    echo "   - Log-MMSE пайплайн настроен"
+    echo "   - После перезагрузки выберите Loopback устройство в BirdNET-Go"
+    echo "   - Проверка: systemctl status respeaker-loopback.service"
+fi
+echo "5. Проверка микрофона: ~/test_mic.sh"
+echo "6. Управление:"
 echo "   systemctl status birdnet-go"
+echo "   systemctl status respeaker-loopback.service"
 echo "   docker logs -f birdnet-go"
 echo
 echo -e "${GREEN}═══════════════════════════════════════════════════════${NC}"
