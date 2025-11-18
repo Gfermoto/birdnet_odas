@@ -25,8 +25,8 @@ Amplitude Estimator) по Ephraim & Malah (1985).
 ----------
 FRAME_SIZE = 1024    # Размер FFT frame (оптимально для птиц 1-8 kHz)
 HOP_SIZE = 512       # Шаг между frames (50% overlap)
-ALPHA = 0.98         # Decision-Directed smoothing (оптимизировано для стационарного шума)
-NOISE_FRAMES = 15    # Количество frames для оценки шума (увеличено для лучшей оценки)
+ALPHA = 0.80         # Decision-Directed smoothing (самое мягкое подавление: минимальное вмешательство, естественный звук)
+NOISE_FRAMES = 10    # Количество frames для оценки шума (быстрая адаптация к изменениям)
 
 Использование:
 -------------
@@ -63,8 +63,8 @@ FS = 16000         # Частота дискретизации
 N_FFT = FRAME_SIZE
 
 # Параметры Log-MMSE
-ALPHA = 0.98       # Decision-Directed smoothing (оптимизировано для подавления стационарного шума: ЛЭП, вентиляторы)
-NOISE_FRAMES = 15  # Количество frames для начальной оценки шума (увеличено для лучшей оценки)
+ALPHA = 0.80       # Decision-Directed smoothing (самое мягкое подавление: минимальное вмешательство, естественный звук)
+NOISE_FRAMES = 10  # Количество frames для начальной оценки шума (быстрая адаптация к изменениям)
 
 
 def extract_channel_0(audio_6ch):
@@ -343,7 +343,7 @@ def log_mmse_filter_stream():
                 # Защита от clipping: мягкое ограничение (soft limiter)
                 # tanh обеспечивает плавное ограничение без резких артефактов
                 # 0.90 для большего запаса против перегрузок при сильном ветре
-                output_normalized = np.tanh(output_normalized * 0.90)
+                output_normalized = np.tanh(output_normalized * 0.95)  # Мягкое ограничение для естественного звука
 
                 # Преобразовать обратно в int16
                 output_int16 = (output_normalized * 32768.0).astype(np.int16)
@@ -409,7 +409,7 @@ def log_mmse_filter_stream():
                 # Защита от clipping: мягкое ограничение (soft limiter)
                 # tanh обеспечивает плавное ограничение без резких артефактов
                 # 0.90 для большего запаса против перегрузок при сильном ветре
-                output_normalized = np.tanh(output_normalized * 0.90)
+                output_normalized = np.tanh(output_normalized * 0.95)  # Мягкое ограничение для естественного звука
 
                 # Преобразовать обратно в int16
                 output_int16 = (output_normalized * 32768.0).astype(np.int16)
