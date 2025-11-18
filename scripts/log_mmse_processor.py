@@ -25,7 +25,7 @@ Amplitude Estimator) по Ephraim & Malah (1985).
 ----------
 FRAME_SIZE = 1024    # Размер FFT frame (оптимально для птиц 1-8 kHz)
 HOP_SIZE = 512       # Шаг между frames (50% overlap)
-ALPHA = 0.80         # Decision-Directed smoothing (самое мягкое подавление: минимальное вмешательство, естественный звук)
+ALPHA = 0.50         # Decision-Directed smoothing (минимальное подавление: шум слышен постоянно, фильтр почти не работает)
 NOISE_FRAMES = 10    # Количество frames для оценки шума (быстрая адаптация к изменениям)
 
 Использование:
@@ -63,7 +63,7 @@ FS = 16000         # Частота дискретизации
 N_FFT = FRAME_SIZE
 
 # Параметры Log-MMSE
-ALPHA = 0.80       # Decision-Directed smoothing (самое мягкое подавление: минимальное вмешательство, естественный звук)
+ALPHA = 0.50       # Decision-Directed smoothing (минимальное подавление: шум слышен постоянно, фильтр почти не работает)
 NOISE_FRAMES = 10  # Количество frames для начальной оценки шума (быстрая адаптация к изменениям)
 
 
