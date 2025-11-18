@@ -23,10 +23,10 @@ Amplitude Estimator) по Ephraim & Malah (1985).
 
 Параметры:
 ----------
-FRAME_SIZE = 1024    # Размер FFT frame
+FRAME_SIZE = 1024    # Размер FFT frame (оптимально для птиц 1-8 kHz)
 HOP_SIZE = 512       # Шаг между frames (50% overlap)
-ALPHA = 0.95         # Decision-Directed smoothing
-NOISE_FRAMES = 10    # Количество frames для оценки шума
+ALPHA = 0.98         # Decision-Directed smoothing (оптимизировано для стационарного шума)
+NOISE_FRAMES = 15    # Количество frames для оценки шума (увеличено для лучшей оценки)
 
 Использование:
 -------------
@@ -57,14 +57,14 @@ from scipy.special import exp1
 from scipy.signal.windows import hann
 
 # Параметры STFT
-FRAME_SIZE = 1024  # Лучшее частотное разрешение для птиц
-HOP_SIZE = 512     # 50% overlap
+FRAME_SIZE = 1024  # Лучшее частотное разрешение для птиц (1-8 kHz)
+HOP_SIZE = 512     # 50% overlap для плавного восстановления
 FS = 16000         # Частота дискретизации
 N_FFT = FRAME_SIZE
 
 # Параметры Log-MMSE
-ALPHA = 0.95       # Decision-Directed smoothing (для нестационарного шума)
-NOISE_FRAMES = 10  # Количество frames для начальной оценки шума
+ALPHA = 0.98       # Decision-Directed smoothing (оптимизировано для подавления стационарного шума: ЛЭП, вентиляторы)
+NOISE_FRAMES = 15  # Количество frames для начальной оценки шума (увеличено для лучшей оценки)
 
 
 def extract_channel_0(audio_6ch):
@@ -340,6 +340,11 @@ def log_mmse_filter_stream():
                 # [HOP_SIZE:FRAME_SIZE] в полном frame
                 output_normalized = output_buffer[:HOP_SIZE] / norm[HOP_SIZE:FRAME_SIZE]
 
+                # Защита от clipping: мягкое ограничение (soft limiter)
+                # tanh обеспечивает плавное ограничение без резких артефактов
+                # 0.90 для большего запаса против перегрузок при сильном ветре
+                output_normalized = np.tanh(output_normalized * 0.90)
+
                 # Преобразовать обратно в int16
                 output_int16 = (output_normalized * 32768.0).astype(np.int16)
 
@@ -400,6 +405,11 @@ def log_mmse_filter_stream():
                 # Нормализация и вывод
                 # Используем norm[HOP_SIZE:FRAME_SIZE] для правильной нормализации
                 output_normalized = output_buffer[:HOP_SIZE] / norm[HOP_SIZE:FRAME_SIZE]
+
+                # Защита от clipping: мягкое ограничение (soft limiter)
+                # tanh обеспечивает плавное ограничение без резких артефактов
+                # 0.90 для большего запаса против перегрузок при сильном ветре
+                output_normalized = np.tanh(output_normalized * 0.90)
 
                 # Преобразовать обратно в int16
                 output_int16 = (output_normalized * 32768.0).astype(np.int16)
