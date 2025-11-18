@@ -166,6 +166,10 @@ docker logs -n 200 birdnet-go
    - Timezone: ваш часовой пояс
 
 2. **Audio Settings**:
+   
+   > **Подробное описание пайплайна:** См. [audio_pipeline.md](audio_pipeline.md)
+   
+   Настройка аудио устройства:
    - Input Source: Network Stream
    - Sample Rate: 48000 Hz
    - Channels: 1 (Mono)

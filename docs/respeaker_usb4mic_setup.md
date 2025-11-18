@@ -137,17 +137,17 @@ python3 tuning.py STATNOISEONOFF 1
 python3 tuning.py NONSTATNOISEONOFF 1
 python3 tuning.py TRANSIENTONOFF 1
 
-# Параметры шумоподавления (усилено для подавления фонового шума)
-python3 tuning.py GAMMA_NS_SR 2.0
+# Параметры шумоподавления (оптимизировано для ветрового шума)
+python3 tuning.py GAMMA_NS_SR 2.5  # Усилено для стационарного шума
 python3 tuning.py GAMMA_NN_SR 1.1  # Не изменяется (firmware limitation)
-python3 tuning.py MIN_NS_SR 0.15
-python3 tuning.py MIN_NN_SR 0.2
+python3 tuning.py MIN_NS_SR 0.1    # Более глубокое подавление стационарного шума
+python3 tuning.py MIN_NN_SR 0.1    # Более глубокое подавление нестационарного шума (ветер)
 
-# AGC: включить, но ограничить усиление (снижено для предотвращения усиления фонового шума)
+# AGC: включить с умеренным усилением (шум был из-за ресемплинга, а не усиления)
 python3 tuning.py AGCONOFF 1
-python3 tuning.py AGCMAXGAIN 8.0
+python3 tuning.py AGCMAXGAIN 5.0
 python3 tuning.py AGCDESIREDLEVEL 0.005
-python3 tuning.py AGCTIME 0.3
+python3 tuning.py AGCTIME 0.5
 
 # VAD: отключить (не нужен для птиц - записываем все звуки, не только "активность")
 # GAMMAVAD_SR = 1000 означает очень высокий порог, фактически отключает VAD
@@ -155,12 +155,15 @@ python3 tuning.py AGCTIME 0.3
 python3 tuning.py GAMMAVAD_SR 1000
 ```
 
-**Изменения на основе анализа спектра:**
+**Изменения на основе анализа спектра (включая ветровой шум):**
 - `HPFONOFF`: остаётся **3** (180 Гц - максимальное значение, лучшее подавление низкочастотного шума)
-- `GAMMA_NS_SR`: 1.0 → **2.0** - усиленное шумоподавление для средних частот
-- `MIN_NS_SR`: 0.2 → **0.15** - более агрессивное подавление стационарного шума
-- `MIN_NN_SR`: 0.3 → **0.2** - более агрессивное подавление нестационарного шума
-- `AGCMAXGAIN`: 15.0 → **8.0** - предотвращение усиления фонового шума
+- `GAMMA_NS_SR`: 1.0 → **2.5** - усиленное шумоподавление для стационарного шума (диапазон: 0.0-3.0)
+- `GAMMA_NN_SR`: **1.1** - не изменяется (ограничение firmware, диапазон: 0.0-3.0)
+- `MIN_NS_SR`: 0.2 → **0.1** - более глубокое подавление стационарного шума (меньше = больше подавление)
+- `MIN_NN_SR`: 0.3 → **0.1** - более глубокое подавление нестационарного шума (ветер) (меньше = больше подавление)
+- `AGCMAXGAIN`: default 30dB → **5.0 dB** - низкое усиление для предотвращения усиления шума (диапазон: 0-60 dB)
+- `AGCDESIREDLEVEL`: **0.005** - соответствует default -23dBov (правильно)
+- `AGCTIME`: **0.5 сек** - время реакции AGC (диапазон: 0.1-1.0 сек)
 
 ### Автоматическое применение настроек при загрузке
 
@@ -179,14 +182,14 @@ python3 tuning.py NLAEC_MODE 0
 python3 tuning.py STATNOISEONOFF 1
 python3 tuning.py NONSTATNOISEONOFF 1
 python3 tuning.py TRANSIENTONOFF 1
-python3 tuning.py GAMMA_NS_SR 2.0
+python3 tuning.py GAMMA_NS_SR 2.5
 python3 tuning.py GAMMA_NN_SR 1.1
-python3 tuning.py MIN_NS_SR 0.15
-python3 tuning.py MIN_NN_SR 0.2
+python3 tuning.py MIN_NS_SR 0.1
+python3 tuning.py MIN_NN_SR 0.1
 python3 tuning.py AGCONOFF 1
-python3 tuning.py AGCMAXGAIN 8.0
+python3 tuning.py AGCMAXGAIN 5.0
 python3 tuning.py AGCDESIREDLEVEL 0.005
-python3 tuning.py AGCTIME 0.3
+python3 tuning.py AGCTIME 0.5
 python3 tuning.py GAMMAVAD_SR 1000
 EOF
 
@@ -285,31 +288,35 @@ aplay -D plughw:ArrayUAC10,0 -f S16_LE -r 16000 -c 1 test_all_channels.wav
 #### Установка и настройка
 
 ```bash
-# 1. Установить SoX и настроить автозагрузку модуля loopback с переименованием
-apt-get install -y sox
+# 1. Установить зависимости и настроить автозагрузку модуля loopback
+apt-get install -y sox python3-scipy python3-numpy
 echo "snd-aloop" > /etc/modules-load.d/snd-aloop.conf
 # Переименование карты для различения устройств в BirdNET-Go
 echo "options snd-aloop id=LoopbackRespeaker index=2" > /etc/modprobe.d/snd-aloop.conf
 modprobe snd-aloop
 
-# 2. Создать скрипт для передачи аудио
+# 2. Скопировать Log-MMSE процессор
+cp scripts/log_mmse_processor.py /usr/local/bin/
+chmod +x /usr/local/bin/log_mmse_processor.py
+
+# 3. Создать скрипт для передачи аудио
 cat > /usr/local/bin/respeaker_loopback.sh << 'EOF'
 #!/bin/bash
-# Скрипт для передачи ReSpeaker через SoX в ALSA loopback
+# Скрипт для передачи ReSpeaker через Log-MMSE и SoX в ALSA loopback
 while true; do
     arecord -D hw:ArrayUAC10,0 -f S16_LE -r 16000 -c 6 -t raw 2>/dev/null | \
-    sox -t raw -r 16000 -c 6 -e signed-integer -b 16 -L - \
-        -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - \
-        remix 1 | \
-    aplay -D hw:LoopbackRespeaker,1,0 -f S16_LE -r 48000 -c 1 -t raw 2>/dev/null || sleep 1
+    python3 /usr/local/bin/log_mmse_processor.py | \
+    sox -t raw -r 16000 -c 1 -e signed-integer -b 16 -L - \
+        -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - | \
+    aplay -D hw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw 2>/dev/null || sleep 1
 done
 EOF
 chmod +x /usr/local/bin/respeaker_loopback.sh
 
-# 3. Создать systemd сервис
+# 4. Создать systemd сервис
 cat > /etc/systemd/system/respeaker-loopback.service << 'EOF'
 [Unit]
-Description=ReSpeaker to ALSA Loopback via SoX
+Description=ReSpeaker to ALSA Loopback via Log-MMSE and SoX
 After=sound.target
 Wants=sound.target
 
@@ -323,20 +330,20 @@ RestartSec=2
 WantedBy=multi-user.target
 EOF
 
-# 4. ALSA конфигурация не требуется
+# 5. ALSA конфигурация не требуется
 # BirdNET-Go использует устройства напрямую через hw:Loopback,0,0
 # Виртуальные PCM устройства не видны в списке BirdNET-Go
 
-# 5. Запустить сервис
+# 6. Запустить сервис
 systemctl daemon-reload
 systemctl enable respeaker-loopback.service
 systemctl start respeaker-loopback.service
 
-# 6. Проверка
+# 7. Проверка
 systemctl status respeaker-loopback.service
-arecord -D hw:LoopbackRespeak,0,0 -f S16_LE -r 48000 -c 1 -d 2 /tmp/test.wav
+arecord -D hw:2,0,0 -f S16_LE -r 48000 -c 1 -d 2 /tmp/test.wav
 
-# 7. Перезагрузка (рекомендуется для применения всех изменений)
+# 8. Перезагрузка (рекомендуется для применения всех изменений)
 reboot
 ```
 
@@ -371,9 +378,21 @@ reboot
    - BirdNET-Go должен читать из device 0 (`:2,0`), который отображается как **третье устройство** в списке
    - После перезагрузки BirdNET-Go автоматически выбирает правильное устройство (`:2,0`)
 
+#### Log-MMSE шумоподавление
+
+В текущей реализации pipeline включает Log-MMSE шумоподавление для улучшения качества записи птиц в условиях ветра и фонового шума.
+
+**Подробное описание:** См. [audio_pipeline.md](audio_pipeline.md)
+
+**Краткая информация:**
+- Алгоритм: Log-MMSE (Ephraim & Malah, 1985)
+- Скрипт: `/usr/local/bin/log_mmse_processor.py`
+- Pipeline: ReSpeaker → Log-MMSE → SoX → Loopback → BirdNET-Go
+
 #### Преимущества этого решения
 
 - ✅ Качественный ресемплинг через SoX (лучше чем ALSA plug)
+- ✅ Log-MMSE шумоподавление для полевых условий
 - ✅ Извлечение только канала 0 (beamformed)
 - ✅ Автоматический запуск при загрузке системы
 - ✅ Стабильная работа в фоновом режиме
@@ -467,6 +486,49 @@ aplay test.wav
 python3 tuning.py AGCONOFF
 python3 tuning.py AGCMAXGAIN
 ```
+
+### Проблема: Фоновый шум в записи
+
+Если характер шума указывает на физические источники помех, рекомендуется:
+
+#### 1. Ветрозащита (меховой чехол)
+
+**Проблема:** Низкочастотный шум от ветра, движения воздуха
+
+**Решение:**
+- Использовать меховой ветрозащитный чехол (deadcat/windshield) на микрофон
+- Подходит для полевых условий, особенно на открытом воздухе
+- Подавляет низкочастотные шумы от ветра и движения воздуха
+
+**Где приобрести:**
+- Специализированные магазины аудио оборудования
+- Онлайн-магазины (AliExpress, Amazon)
+- Универсальные ветрозащиты для USB-микрофонов
+
+#### 2. Ферритовый фильтр на кабель питания
+
+**Проблема:** Электромагнитные помехи от блока питания, наводки по USB-кабелю
+
+**Решение:**
+- Установить ферритовый фильтр (ferrite bead/choke) на USB-кабель питания
+- Фильтр должен быть как можно ближе к микрофону
+- Подавляет высокочастотные электромагнитные помехи
+
+**Типы ферритовых фильтров:**
+- Защелкивающиеся (snap-on) - удобны для установки на существующий кабель
+- Встроенные в кабель - более надежное решение
+
+**Где приобрести:**
+- Радиомагазины
+- Онлайн-магазины (AliExpress, eBay)
+- Искать "ferrite bead USB" или "ferrite choke USB"
+
+#### 3. Дополнительные рекомендации
+
+- Использовать качественный экранированный USB-кабель
+- Избегать прокладки кабеля рядом с источниками помех (блоки питания, трансформаторы)
+- Использовать отдельный USB-порт, не через USB-хаб
+- Проверить заземление системы (если возможно)
 
 ---
 

@@ -2,17 +2,33 @@
 
 ## Документация
 
-1. **[birdnet_go_setup.md](birdnet_go_setup.md)** — установка BirdNET-Go на NanoPi M4B
-   - Docker
-   - Фиксы для M4B (iptables-legacy, fuse-overlayfs)
-   - Автозапуск
-   - Troubleshooting
+Документация разделена на три основных раздела:
 
-2. **[respeaker_usb4mic_setup.md](respeaker_usb4mic_setup.md)** — настройка ReSpeaker USB 4-Mic Array
-   - Прошивка 6-канальной firmware
-   - DSP настройки для птиц
-   - Интеграция с BirdNET-Go
-   - Стартовые скрипты
+### 1. Микрофон
+
+**[respeaker_usb4mic_setup.md](respeaker_usb4mic_setup.md)** — настройка ReSpeaker USB 4-Mic Array
+- Прошивка 6-канальной firmware
+- DSP настройки для птиц (HPF, шумоподавление, AGC)
+- Оптимизация параметров для полевых условий
+- Физическая защита (ветрозащита, ферритовый фильтр)
+
+### 2. Пайплайн обработки
+
+**[audio_pipeline.md](audio_pipeline.md)** — полный аудио пайплайн и алгоритм фильтрации
+- Архитектура пайплайна (ReSpeaker → Log-MMSE → SoX → Loopback → BirdNET-Go)
+- Алгоритм Log-MMSE шумоподавления (математические основы)
+- Ресемплинг SoX (16kHz → 48kHz)
+- ALSA Loopback устройство
+- Производительность и оптимизация
+
+### 3. BirdNET-Go
+
+**[birdnet_go_setup.md](birdnet_go_setup.md)** — установка и настройка BirdNET-Go
+- Docker установка
+- Фиксы для NanoPi M4B (iptables-legacy, fuse-overlayfs)
+- Настройка аудио устройства
+- Встроенные фильтры (HPF, LPF)
+- Автозапуск и troubleshooting
 
 ## Быстрый старт
 
