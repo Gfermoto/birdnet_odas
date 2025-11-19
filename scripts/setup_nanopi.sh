@@ -11,15 +11,15 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-print_step() { echo -e "${GREEN}► $1${NC}"; }
-print_info() { echo -e "${CYAN}ℹ️  $1${NC}"; }
-print_success() { echo -e "${GREEN}✅ $1${NC}"; }
-print_error() { echo -e "${RED}❌ $1${NC}"; }
-print_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+print_step() { echo -e "${GREEN}[*] $1${NC}"; }
+print_info() { echo -e "${CYAN}[i] $1${NC}"; }
+print_success() { echo -e "${GREEN}[+] $1${NC}"; }
+print_error() { echo -e "${RED}[-] $1${NC}"; }
+print_warning() { echo -e "${YELLOW}[!] $1${NC}"; }
 
-echo -e "${GREEN}╔═══════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║  NanoPi M4B + BirdNET-Go Setup                       ║${NC}"
-echo -e "${GREEN}╚═══════════════════════════════════════════════════════╝${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}  NanoPi M4B + BirdNET-Go Setup${NC}"
+echo -e "${GREEN}========================================${NC}"
 echo
 
 # 1. Проверка системы
@@ -235,7 +235,7 @@ chmod +x "$HOME/test_mic.sh"
 
 print_success "Установка завершена"
 echo
-echo -e "${GREEN}═══════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}========================================${NC}"
 echo -e "${CYAN}Следующие шаги:${NC}"
 echo
 echo "1. Перелогиньтесь для применения группы docker"
@@ -253,4 +253,4 @@ echo "   systemctl status birdnet-go"
 echo "   systemctl status respeaker-loopback.service"
 echo "   docker logs -f birdnet-go"
 echo
-echo -e "${GREEN}═══════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}========================================${NC}"

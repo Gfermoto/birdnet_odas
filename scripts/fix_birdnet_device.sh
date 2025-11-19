@@ -16,13 +16,13 @@ if [ -f "$CONFIG_FILE" ]; then
     CURRENT_DEVICE=$(grep -i "audio.*device\|input.*device" "$CONFIG_FILE" 2>/dev/null | grep -o ":2,[01]")
     
     if [ "$CURRENT_DEVICE" = ":2,1" ] || [ -z "$CURRENT_DEVICE" ]; then
-        echo "⚠️  Обнаружено неправильное или отсутствующее устройство"
+        echo "[!] Обнаружено неправильное или отсутствующее устройство"
         echo "   Нужно вручную выбрать устройство :2,0 (ТРЕТЬЕ в списке) в Web GUI"
     else
-        echo "✅ Устройство настроено правильно: $CURRENT_DEVICE"
+        echo "[+] Устройство настроено правильно: $CURRENT_DEVICE"
     fi
 else
-    echo "⚠️  Конфиг не найден, проверьте вручную в Web GUI"
+    echo "[!] Конфиг не найден, проверьте вручную в Web GUI"
 fi
 
 echo ""
