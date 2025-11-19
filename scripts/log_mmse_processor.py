@@ -72,6 +72,17 @@ NOISE_FRAMES = 15  # Количество frames для начальной оц�
                    # при сохранении быстрой адаптации к изменениям (птицы появляются/исчезают)
                    # Диапазон: 10-20 frames (меньше = быстрее адаптация, больше = точнее оценка)
 
+# Параметры адаптивной оценки шума
+NOISE_ESTIMATE_INIT_ALPHA = 0.95   # Коэффициент сглаживания для начальной оценки шума
+NOISE_ESTIMATE_INIT_BETA = 0.05    # 1 - NOISE_ESTIMATE_INIT_ALPHA
+NOISE_ESTIMATE_ADAPT_ALPHA = 0.995  # Коэффициент сглаживания для адаптивного обновления
+NOISE_ESTIMATE_ADAPT_BETA = 0.005   # 1 - NOISE_ESTIMATE_ADAPT_ALPHA
+
+# Численные константы
+EPSILON = 1e-10           # Малое значение для численной стабильности (деление на ноль)
+INT16_MAX = 32768.0       # Максимальное значение int16 для нормализации [-1, 1]
+TANH_CLIP_FACTOR = 0.95  # Коэффициент для мягкого ограничения (tanh clipping)
+
 
 def extract_channel_0(audio_6ch):
     """
@@ -125,7 +136,7 @@ def log_mmse_gain(xi, gamma):
     """
     # ν = (ξ/(1+ξ)) × γ
     nu = (xi / (1 + xi)) * gamma
-    nu = np.maximum(nu, 1e-10)  # Численная стабильность
+    nu = np.maximum(nu, EPSILON)  # Численная стабильность
 
     # Exponential integral E₁(ν)
     e1_nu = exp1(nu)
@@ -182,7 +193,7 @@ def estimate_a_priori_snr_dd(gamma_post, prev_gain, prev_gamma_post,
         xi = xi_prev_term + (1 - alpha) * xi_ml
 
     # Ограничить снизу
-    xi = np.maximum(xi, 1e-10)
+    xi = np.maximum(xi, EPSILON)
 
     return xi
 
@@ -264,7 +275,7 @@ def log_mmse_filter_stream():
         # Вклад предыдущего frame (overlap)
         if i >= HOP_SIZE:
             norm[i] += window_squared[i - HOP_SIZE]
-    norm = np.maximum(norm, 1e-10)
+    norm = np.maximum(norm, EPSILON)
 
     try:
         while True:
@@ -291,7 +302,7 @@ def log_mmse_filter_stream():
                 frame_ch0 = extract_channel_0(frame_6ch)
 
                 # Преобразовать в float32 [-1, 1]
-                frame_float = frame_ch0.astype(np.float32) / 32768.0
+                frame_float = frame_ch0.astype(np.float32) / INT16_MAX
 
                 # Применить window
                 frame_windowed = frame_float * window
@@ -310,15 +321,17 @@ def log_mmse_filter_stream():
                 elif frame_count < NOISE_FRAMES:
                     # Начальная оценка: экспоненциальное сглаживание
                     # Более консервативное обновление для точной оценки
-                    noise_psd = 0.95 * noise_psd + 0.05 * Y_power
+                    noise_psd = (NOISE_ESTIMATE_INIT_ALPHA * noise_psd +
+                                NOISE_ESTIMATE_INIT_BETA * Y_power)
                 else:
                     # Адаптивное обновление после начальной оценки
-                    # Медленное обновление (0.995) для отслеживания медленных изменений шума
+                    # Медленное обновление для отслеживания медленных изменений шума
                     # без подавления внезапных сигналов (птицы)
-                    noise_psd = 0.995 * noise_psd + 0.005 * Y_power
+                    noise_psd = (NOISE_ESTIMATE_ADAPT_ALPHA * noise_psd +
+                                NOISE_ESTIMATE_ADAPT_BETA * Y_power)
 
                 # A posteriori SNR
-                gamma_post = Y_power / (noise_psd + 1e-10)
+                gamma_post = Y_power / (noise_psd + EPSILON)
 
                 # A priori SNR (Decision-Directed) - исправленная формула
                 xi_priori = estimate_a_priori_snr_dd(
@@ -358,11 +371,10 @@ def log_mmse_filter_stream():
 
                 # Защита от clipping: мягкое ограничение (soft limiter)
                 # tanh обеспечивает плавное ограничение без резких артефактов
-                # 0.90 для большего запаса против перегрузок при сильном ветре
-                output_normalized = np.tanh(output_normalized * 0.95)  # Мягкое ограничение для естественного звука
+                output_normalized = np.tanh(output_normalized * TANH_CLIP_FACTOR)
 
                 # Преобразовать обратно в int16
-                output_int16 = (output_normalized * 32768.0).astype(np.int16)
+                output_int16 = (output_normalized * INT16_MAX).astype(np.int16)
 
                 # Записать в stdout
                 sys.stdout.buffer.write(output_int16.tobytes())
@@ -382,7 +394,7 @@ def log_mmse_filter_stream():
             frame_ch0 = extract_channel_0(frame_6ch)
 
             # Преобразовать в float32
-            frame_float = frame_ch0.astype(np.float32) / 32768.0
+            frame_float = frame_ch0.astype(np.float32) / INT16_MAX
 
             # Применить window
             frame_windowed = frame_float * window
@@ -395,7 +407,7 @@ def log_mmse_filter_stream():
 
             # A posteriori SNR
             if noise_psd is not None:
-                gamma_post = Y_power / (noise_psd + 1e-10)
+                gamma_post = Y_power / (noise_psd + EPSILON)
 
                 # A priori SNR
                 xi_priori = estimate_a_priori_snr_dd(
@@ -424,11 +436,10 @@ def log_mmse_filter_stream():
 
                 # Защита от clipping: мягкое ограничение (soft limiter)
                 # tanh обеспечивает плавное ограничение без резких артефактов
-                # 0.90 для большего запаса против перегрузок при сильном ветре
-                output_normalized = np.tanh(output_normalized * 0.95)  # Мягкое ограничение для естественного звука
+                output_normalized = np.tanh(output_normalized * TANH_CLIP_FACTOR)
 
                 # Преобразовать обратно в int16
-                output_int16 = (output_normalized * 32768.0).astype(np.int16)
+                output_int16 = (output_normalized * INT16_MAX).astype(np.int16)
 
                 # Записать в stdout
                 sys.stdout.buffer.write(output_int16.tobytes())
