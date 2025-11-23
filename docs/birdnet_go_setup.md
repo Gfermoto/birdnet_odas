@@ -141,6 +141,9 @@ docker logs -n 200 birdnet-go
    docker run -d \
      --name birdnet-go \
      --restart unless-stopped \
+     --dns 8.8.8.8 \
+     --dns 1.1.1.1 \
+     --dns 192.168.1.1 \
      -p 8080:8080 \
      -p 8081:8081 \
      --device /dev/snd \
@@ -155,6 +158,9 @@ docker logs -n 200 birdnet-go
    docker run -d \
      --name birdnet-go \
      --restart unless-stopped \
+     --dns 8.8.8.8 \
+     --dns 1.1.1.1 \
+     --dns 192.168.1.1 \
      -p 8080:8080 \
      -p 8081:8081 \
      --device /dev/snd \
@@ -453,8 +459,11 @@ bash ./install.sh --update
 ## Быстрый запуск контейнера (опционально)
 
 ```bash
-# Важно: контейнер должен быть запущен с правильным timezone и доступом к аудио
+# Важно: контейнер должен быть запущен с правильным timezone, доступом к аудио и DNS-серверами
 docker run -d --name birdnet-go --restart unless-stopped \
+  --dns 8.8.8.8 \
+  --dns 1.1.1.1 \
+  --dns 192.168.1.1 \
   -p 8080:8080 -p 8081:8081 \
   --device /dev/snd \
   -v birdnet-go-config:/config \
@@ -491,6 +500,9 @@ docker pull ghcr.io/tphakala/birdnet-go:nightly
 docker stop birdnet-go || true
 docker rm birdnet-go || true
 docker run -d --name birdnet-go --restart unless-stopped \
+  --dns 8.8.8.8 \
+  --dns 1.1.1.1 \
+  --dns 192.168.1.1 \
   -p 8080:8080 -p 8081:8081 \
   --device /dev/snd \
   -v birdnet-go-config:/config \
@@ -647,6 +659,9 @@ docker cp logs/ birdnet-go:/app/
 
 # Запуск контейнера
 docker run -d --name birdnet-go --restart unless-stopped \
+  --dns 8.8.8.8 \
+  --dns 1.1.1.1 \
+  --dns 192.168.1.1 \
   -p 8080:8080 -p 8081:8081 \
   --device /dev/snd \
   -v birdnet-go-config:/config \
