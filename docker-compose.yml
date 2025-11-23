@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  birdnet-go:
+    image: ghcr.io/tphakala/birdnet-go:${BIRDNET_IMAGE_TAG:-nightly}
+    container_name: birdnet-go
+    restart: unless-stopped
+    network_mode: host
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 192.168.1.1
+    # ports:  # Не нужно в режиме host (порты доступны напрямую)
+    #   - "8080:8080"
+    #   - "8081:8081"
+    devices:
+      - /dev/snd:/dev/snd
+    volumes:
+      - birdnet-go-config:/config
+      - birdnet-go-data:/data
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=${TZ:-Europe/Moscow}
+    command: birdnet-go realtime
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  birdnet-go-config:
+    name: birdnet-go-config
+    # Для использования существующего volume замените на:
+    # external: true
+    # name: 3fad40c5083b7fce2a598d24433e9378258e69ab6c3e2709e01425ea15a9a070
+  birdnet-go-data:
+    name: birdnet-go-data
+    # Для использования существующего volume замените на:
+    # external: true
+    # name: 14219d166d01ec1ff5b8983b6b62fe9377216660b00732cf8fca9706059938ad
+

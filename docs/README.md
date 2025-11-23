@@ -37,6 +37,12 @@
 - Сетевые режимы Docker: host vs bridge
 - Общие команды диагностики
 
+**[docker_compose_guide.md](docker_compose_guide.md)** — использование Docker Compose
+- Быстрый старт с docker-compose
+- Управление контейнером через compose
+- Миграция с существующего контейнера
+- Конфигурация и переменные окружения
+
 
 ## Быстрый старт
 

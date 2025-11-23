@@ -38,6 +38,10 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Windows Zone.Identifier (файлы безопасности Windows)
+*:Zone.Identifier
+*.Zone.Identifier
+
 # Python
 __pycache__/
 *.py[cod]
