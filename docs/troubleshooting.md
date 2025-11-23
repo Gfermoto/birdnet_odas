@@ -82,7 +82,9 @@ docker run -d \
   birdnet-go realtime
 ```
 
-### Альтернативное решение: Настройка DNS для всех контейнеров
+### Альтернативное решение 1: Настройка DNS для всех контейнеров (только для bridge режима)
+
+**Важно:** Это решение работает только для контейнеров в bridge режиме. Для `network_mode: host` см. "Альтернативное решение 2" ниже.
 
 Можно настроить DNS по умолчанию для всех Docker контейнеров через `/etc/docker/daemon.json`:
 
@@ -95,6 +97,36 @@ EOF
 
 sudo systemctl restart docker
 ```
+
+### Альтернативное решение 2: Настройка DNS на хосте (для network_mode: host)
+
+Если используется `network_mode: host` (например, в docker-compose.yml), настройки `dns` в Docker **игнорируются**, так как контейнер использует сетевой стек хоста напрямую. В этом случае нужно настроить DNS на самом хосте.
+
+**Через systemd-resolved (Ubuntu/Debian):**
+
+```bash
+sudo mkdir -p /etc/systemd/resolved.conf.d
+sudo tee /etc/systemd/resolved.conf.d/dns_servers.conf > /dev/null <<EOF
+[Resolve]
+DNS=8.8.8.8 1.1.1.1 192.168.1.1
+FallbackDNS=8.8.4.4 1.0.0.1
+EOF
+
+sudo systemctl restart systemd-resolved
+```
+
+**Через /etc/resolv.conf (если не используется systemd-resolved):**
+
+```bash
+sudo cp /etc/resolv.conf /etc/resolv.conf.backup
+sudo tee /etc/resolv.conf > /dev/null <<EOF
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+nameserver 192.168.1.1
+EOF
+```
+
+Подробнее см. раздел "Настройка DNS на хосте" в [docker_compose_guide.md](docker_compose_guide.md).
 
 ### Проверка
 

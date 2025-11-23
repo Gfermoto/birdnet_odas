@@ -110,10 +110,11 @@ services:
     container_name: birdnet-go
     restart: unless-stopped
     network_mode: host
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-      - 192.168.1.1
+    # dns:  # НЕ РАБОТАЕТ в режиме host - контейнер использует DNS хоста напрямую
+    #   - 8.8.8.8
+    #   - 1.1.1.1
+    #   - 192.168.1.1
+    #   Для настройки DNS см. раздел "Настройка DNS на хосте" ниже
     devices:
       - /dev/snd:/dev/snd
     volumes:
@@ -126,6 +127,8 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 ```
+
+**Важно:** В режиме `network_mode: host` настройки `dns` в docker-compose.yml **игнорируются**, так как контейнер использует сетевой стек хоста напрямую. DNS нужно настраивать на самом хосте (см. раздел "Настройка DNS на хосте" ниже).
 
 ### Файл .env
 
@@ -140,6 +143,72 @@ TZ=Europe/Moscow
 ```
 
 **Важно:** Файл `.env` не должен попадать в git (уже в .gitignore). Используйте `env.example` как шаблон.
+
+## Настройка DNS на хосте
+
+В режиме `network_mode: host` контейнер использует DNS-настройки хоста напрямую. Если возникают проблемы с DNS (например, таймауты при загрузке на BirdWeather), нужно настроить DNS на самом хосте.
+
+### Вариант 1: Настройка через systemd-resolved (Ubuntu/Debian)
+
+```bash
+# Создать конфигурацию DNS
+sudo mkdir -p /etc/systemd/resolved.conf.d
+sudo tee /etc/systemd/resolved.conf.d/dns_servers.conf > /dev/null <<EOF
+[Resolve]
+DNS=8.8.8.8 1.1.1.1 192.168.1.1
+FallbackDNS=8.8.4.4 1.0.0.1
+EOF
+
+# Перезапустить systemd-resolved
+sudo systemctl restart systemd-resolved
+
+# Проверить настройки
+systemd-resolve --status
+```
+
+### Вариант 2: Настройка через /etc/resolv.conf (если не используется systemd-resolved)
+
+```bash
+# Создать backup
+sudo cp /etc/resolv.conf /etc/resolv.conf.backup
+
+# Настроить DNS
+sudo tee /etc/resolv.conf > /dev/null <<EOF
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+nameserver 192.168.1.1
+EOF
+
+# Защитить от перезаписи (опционально)
+sudo chattr +i /etc/resolv.conf
+```
+
+### Вариант 3: Настройка через NetworkManager (если используется)
+
+```bash
+# Для Ubuntu/Debian с NetworkManager
+sudo nmcli connection modify "Wired connection 1" ipv4.dns "8.8.8.8 1.1.1.1 192.168.1.1"
+sudo nmcli connection up "Wired connection 1"
+```
+
+### Проверка DNS
+
+```bash
+# Проверить текущие DNS-серверы
+cat /etc/resolv.conf
+
+# Проверить разрешение имен
+nslookup app.birdweather.com
+dig app.birdweather.com
+
+# Проверить из контейнера (после перезапуска)
+docker exec birdnet-go nslookup app.birdweather.com
+```
+
+**Примечание:** После изменения DNS на хосте перезапустите контейнер:
+```bash
+docker-compose restart birdnet-go
+```
 
 ## Миграция с существующего контейнера
 
