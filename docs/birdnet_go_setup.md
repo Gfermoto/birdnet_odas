@@ -141,11 +141,12 @@ docker logs -n 200 birdnet-go
    docker run -d \
      --name birdnet-go \
      --restart unless-stopped \
+     --network host \
      --dns 8.8.8.8 \
      --dns 1.1.1.1 \
      --dns 192.168.1.1 \
-     -p 8080:8080 \
-     -p 8081:8081 \
+     # -p 8080:8080 \  # Не нужно в режиме host (порты доступны напрямую)
+     # -p 8081:8081 \  # Не нужно в режиме host (порты доступны напрямую)
      --device /dev/snd \
      -v 3fad40c5083b7fce2a598d24433e9378258e69ab6c3e2709e01425ea15a9a070:/config \
      -v 14219d166d01ec1ff5b8983b6b62fe9377216660b00732cf8fca9706059938ad:/data \
@@ -158,11 +159,12 @@ docker logs -n 200 birdnet-go
    docker run -d \
      --name birdnet-go \
      --restart unless-stopped \
+     --network host \
      --dns 8.8.8.8 \
      --dns 1.1.1.1 \
      --dns 192.168.1.1 \
-     -p 8080:8080 \
-     -p 8081:8081 \
+     # -p 8080:8080 \  # Не нужно в режиме host (порты доступны напрямую)
+     # -p 8081:8081 \  # Не нужно в режиме host (порты доступны напрямую)
      --device /dev/snd \
      -v birdnet-go-config:/config \
      -v birdnet-go-data:/data \
@@ -459,12 +461,13 @@ bash ./install.sh --update
 ## Быстрый запуск контейнера (опционально)
 
 ```bash
-# Важно: контейнер должен быть запущен с правильным timezone, доступом к аудио и DNS-серверами
+# Важно: контейнер должен быть запущен с правильным timezone, доступом к аудио, DNS-серверами и network host
 docker run -d --name birdnet-go --restart unless-stopped \
+  --network host \
   --dns 8.8.8.8 \
   --dns 1.1.1.1 \
   --dns 192.168.1.1 \
-  -p 8080:8080 -p 8081:8081 \
+  # -p 8080:8080 -p 8081:8081 \  # Не нужно в режиме host (порты доступны напрямую)
   --device /dev/snd \
   -v birdnet-go-config:/config \
   -v birdnet-go-data:/data \
@@ -500,10 +503,11 @@ docker pull ghcr.io/tphakala/birdnet-go:nightly
 docker stop birdnet-go || true
 docker rm birdnet-go || true
 docker run -d --name birdnet-go --restart unless-stopped \
+  --network host \
   --dns 8.8.8.8 \
   --dns 1.1.1.1 \
   --dns 192.168.1.1 \
-  -p 8080:8080 -p 8081:8081 \
+  # -p 8080:8080 -p 8081:8081 \  # Не нужно в режиме host (порты доступны напрямую)
   --device /dev/snd \
   -v birdnet-go-config:/config \
   -v birdnet-go-data:/data \
@@ -659,10 +663,11 @@ docker cp logs/ birdnet-go:/app/
 
 # Запуск контейнера
 docker run -d --name birdnet-go --restart unless-stopped \
+  --network host \
   --dns 8.8.8.8 \
   --dns 1.1.1.1 \
   --dns 192.168.1.1 \
-  -p 8080:8080 -p 8081:8081 \
+  # -p 8080:8080 -p 8081:8081 \  # Не нужно в режиме host (порты доступны напрямую)
   --device /dev/snd \
   -v birdnet-go-config:/config \
   -v birdnet-go-data:/data \

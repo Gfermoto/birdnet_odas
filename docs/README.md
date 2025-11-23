@@ -28,7 +28,14 @@
 - Фиксы для NanoPi M4B (iptables-legacy, fuse-overlayfs)
 - Настройка аудио устройства
 - Встроенные фильтры (HPF, LPF)
-- Автозапуск и troubleshooting
+- Автозапуск
+
+**[troubleshooting.md](troubleshooting.md)** — устранение неполадок
+- DNS timeout при загрузке на BirdWeather
+- Ошибки MQTT подключения
+- Ошибки template_renderer в веб-интерфейсе
+- Сетевые режимы Docker: host vs bridge
+- Общие команды диагностики
 
 ## Быстрый старт
 
