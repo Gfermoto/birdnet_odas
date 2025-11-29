@@ -82,51 +82,22 @@ fi
 echo "6. Сетевые параметры..."
 echo "   ⚠ Сетевые параметры отключены для безопасности"
 
-# 7. Параметры ядра для реального времени
-echo "7. Настройка параметров ядра для реального времени..."
-if ! grep -q "kernel.sched_rt_runtime_us" /etc/sysctl.conf 2>/dev/null; then
-    cat <<EOF | sudo tee -a /etc/sysctl.conf > /dev/null
+# 7. Параметры ядра для реального времени - ОТКЛЮЧЕНО (может вызвать проблемы с загрузкой)
+echo "7. Параметры ядра для реального времени..."
+echo "   ⚠ Параметры ядра отключены для безопасности"
 
-# Оптимизация для реального времени
-kernel.sched_rt_runtime_us = 950000
-kernel.sched_rt_period_us = 1000000
-kernel.sched_migration_cost_ns = 5000000
-EOF
-    echo "   ✓ Параметры ядра добавлены в /etc/sysctl.conf"
-else
-    echo "   ✓ Параметры ядра уже настроены"
-fi
-sudo sysctl -p > /dev/null 2>&1 || true
-
-# 8. Применение настроек CPU governor при загрузке
-echo "8. Создание systemd service для CPU governor..."
-sudo tee /etc/systemd/system/set-cpu-governor.service > /dev/null <<'EOF'
-[Unit]
-Description=Set CPU Governor to Performance
-After=sysinit.target
-
-[Service]
-Type=oneshot
-ExecStart=/bin/bash -c 'for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do [ -f "$cpu" ] && echo performance > "$cpu" 2>/dev/null || true; done'
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable set-cpu-governor.service > /dev/null 2>&1
-echo "   ✓ Сервис set-cpu-governor.service создан и включен"
+# 8. CPU governor сервис - ОТКЛЮЧЕНО (может блокировать загрузку)
+echo "8. CPU governor сервис..."
+echo "   ⚠ Сервис set-cpu-governor отключен для безопасности"
 
 echo ""
 echo "=== Оптимизация завершена ==="
 echo "Применены изменения:"
-echo "  - CPU governor: performance"
+echo "  - CPU governor: performance (только текущая сессия, не сохраняется)"
 echo "  - I/O scheduler: deadline"
 echo "  - Swappiness: 1"
 echo "  - vm.dirty_ratio: 10"
 echo "  - Лимиты файловых дескрипторов: 65536"
-echo "  - Сетевые параметры оптимизированы"
 echo ""
 echo "Для применения всех изменений перезагрузите систему: sudo reboot"
 
