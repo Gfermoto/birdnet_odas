@@ -15,7 +15,7 @@ python3 tuning.py GAMMA_NN_SR 1.1  # Не изменяется (firmware limitat
 python3 tuning.py MIN_NS_SR 0.1
 python3 tuning.py MIN_NN_SR 0.1
 python3 tuning.py AGCONOFF 1
-python3 tuning.py AGCMAXGAIN 8.0
+python3 tuning.py AGCMAXGAIN 6.0
 python3 tuning.py AGCDESIREDLEVEL 0.005
 python3 tuning.py AGCTIME 0.1  # Минимальное значение для быстрой реакции на изменения в пении птиц (firmware преобразует в ~0.85 сек)
 python3 tuning.py GAMMAVAD_SR 1000

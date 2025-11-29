@@ -75,3 +75,8 @@ spectrogram.png
 local_settings.py
 local_config.json
 
+# Статьи и публикации (не для Git)
+article.md
+article.txt
+*.article.md
+
