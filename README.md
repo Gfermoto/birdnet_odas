@@ -230,6 +230,25 @@ groups | grep plugdev || sudo usermod -aG plugdev $USER
 
 ## Оптимизация для полевых условий
 
+### Оптимизация производительности
+
+Для максимальной производительности аудио пайплайна рекомендуется применить системные оптимизации:
+
+```bash
+sudo /usr/local/bin/optimize_performance.sh
+```
+
+**Что оптимизируется:**
+- CPU governor: `performance` режим
+- I/O scheduler: `deadline` для всех дисков
+- Swappiness: 1 (минимум swap)
+- vm.dirty_ratio: 10 (оптимизация для аудио буферов)
+- Лимиты файловых дескрипторов: 65536
+- Сетевые параметры для BirdWeather загрузок
+- Параметры ядра для реального времени
+
+**Важно:** После применения оптимизаций рекомендуется перезагрузить систему.
+
 ### Энергосбережение
 
 ```bash
@@ -271,6 +290,31 @@ docker stats
 docker system df
 docker logs -f birdnet-go
 ```
+
+### Метрики производительности
+
+Система автоматически собирает метрики производительности каждые 5 минут:
+
+```bash
+# Статистика пайплайна
+cat /var/log/birdnet-pipeline/pipeline_stats.json
+
+# Метрики производительности (по дням)
+ls /var/log/birdnet-pipeline/metrics/
+cat /var/log/birdnet-pipeline/metrics/$(date +%Y%m%d).json | tail -1
+
+# Ошибки пайплайна
+tail -f /var/log/birdnet-pipeline/errors.log
+
+# Статус сбора метрик
+systemctl status collect-metrics.timer
+```
+
+**Собираемые метрики:**
+- CPU использование (общее и по процессам)
+- Использование памяти
+- Load average
+- Статистика пайплайна (restarts, errors, uptime)
 
 ## Docker Compose
 

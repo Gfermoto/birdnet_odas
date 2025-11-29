@@ -168,7 +168,7 @@ EOF
         sudo chmod +x /usr/local/bin/respeaker_loopback.sh
     fi
     
-    # Создание systemd сервиса
+    # Создание systemd сервиса с оптимизацией производительности
     sudo tee /etc/systemd/system/respeaker-loopback.service >/dev/null <<'EOF'
 [Unit]
 Description=ReSpeaker Audio Pipeline with Log-MMSE and SoX
@@ -182,6 +182,13 @@ Restart=always
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
+
+# Оптимизация производительности
+Nice=-10
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=50
+IOWeight=100
+OOMScoreAdjust=-500
 
 [Install]
 WantedBy=multi-user.target
