@@ -69,10 +69,16 @@ docker-compose logs -f birdnet-go
 ```
 birdnet_odas/
 ├── README.md
+├── docker-compose.yml
+├── env.example
 ├── docs/
 │   ├── README.md
 │   ├── birdnet_go_setup.md
-│   └── respeaker_usb4mic_setup.md
+│   ├── respeaker_usb4mic_setup.md
+│   ├── audio_pipeline.md
+│   ├── docker_compose_guide.md
+│   ├── troubleshooting.md
+│   └── usb_isolator_power.md
 ├── images/
 │   └── README.md
 └── scripts/
@@ -80,8 +86,16 @@ birdnet_odas/
     ├── setup_nanopi.sh
     ├── respeaker-tune.sh
     ├── respeaker_loopback.sh
+    ├── log_mmse_processor.py
+    ├── disable_led_ring.py
     ├── check_audio_devices.sh
-    └── fix_birdnet_device.sh
+    ├── check_gain.sh
+    ├── diagnose_clicks.sh
+    ├── optimize_performance.sh
+    ├── collect_metrics.sh
+    ├── install_metrics_service.sh
+    ├── fix_birdnet_device.sh
+    └── fix_network_dhcp.sh
 ```
 
 ## Требования
@@ -90,8 +104,8 @@ birdnet_odas/
 
 - NanoPi M4B (или совместимая ARM64 платформа)
 - ReSpeaker USB 4 Mic Array (опционально, но рекомендуется)
-- USB-изолятор B505S (рекомендуется для снижения электромагнитных помех)
-- SD-карта минимум 32 GB (рекомендуется 64 GB+)
+- USB-изолятор B505S (рекомендуется для снижения электромагнитных помех и гальванической развязки)
+- SD-карта минимум 32 GB (рекомендуется 64 GB+ для данных)
 - Источник питания 5V/3A
 - Сетевое подключение (Wi-Fi или Ethernet) для первоначальной настройки
 
@@ -101,6 +115,14 @@ birdnet_odas/
 - Docker (устанавливается автоматически)
 - Python 3.6+ (для управления ReSpeaker)
 - ALSA (для работы с аудио)
+
+### Конфигурация хранения
+
+Система оптимизирована для продления срока службы SD карты:
+
+- **SD карта:** Система (2GB) + данные BirdNET (остальное пространство)
+- **eMMC:** Логи и временные файлы (защита SD от износа)
+- **Docker:** Данные в `/data` на SD карте
 
 ## Документация
 
@@ -250,6 +272,20 @@ sudo /usr/local/bin/optimize_performance.sh
 - Параметры ядра для реального времени (блокировали загрузку)
 
 **Важно:** После применения оптимизаций рекомендуется перезагрузить систему.
+
+### Автообновление
+
+Система автоматически обновляет BirdNET-Go через Watchtower:
+
+```bash
+# Проверка статуса
+docker ps | grep watchtower
+docker logs watchtower | tail -20
+
+# Проверка обновлений раз в 24 часа автоматически
+```
+
+Подробнее: [troubleshooting.md](docs/troubleshooting.md#auto-update)
 
 ### Энергосбережение
 
