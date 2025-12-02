@@ -123,21 +123,26 @@ EOF
     # Зависимости Python
     sudo apt-get install -y python3-usb python3-click || python3 -m pip install --break-system-packages pyusb click
     
+    # Установка библиотеки для управления LED кольцом
+    print_info "Установка библиотеки pixel-ring для управления LED..."
+    pip3 install pixel-ring 2>/dev/null || python3 -m pip install --break-system-packages pixel-ring || print_warning "Не удалось установить pixel-ring (можно установить позже: pip3 install pixel-ring)"
+    
     print_success "ReSpeaker готов к настройке DSP (см. respeaker_usb4mic_setup.md)"
     
     # Настройка Log-MMSE пайплайна
     print_info "Настройка Log-MMSE пайплайна..."
     
-    # Установка зависимостей для Log-MMSE
-    sudo apt-get install -y python3-scipy python3-numpy sox
+    # Зависимости для Log-MMSE уже установлены в шаге 2
     
     # Настройка ALSA loopback
     echo "snd-aloop" | sudo tee /etc/modules-load.d/snd-aloop.conf >/dev/null
     echo "options snd-aloop id=ACapture index=2" | sudo tee /etc/modprobe.d/snd-aloop.conf >/dev/null
     sudo modprobe snd-aloop
     
-    # Копирование Log-MMSE процессора
+    # Копирование скриптов
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # Log-MMSE процессор
     if [[ -f "$SCRIPT_DIR/log_mmse_processor.py" ]]; then
         sudo cp "$SCRIPT_DIR/log_mmse_processor.py" /usr/local/bin/
         sudo chmod +x /usr/local/bin/log_mmse_processor.py
@@ -145,6 +150,44 @@ EOF
     else
         print_warning "log_mmse_processor.py не найден в $SCRIPT_DIR"
         print_info "Скопируйте его вручную: cp scripts/log_mmse_processor.py /usr/local/bin/"
+    fi
+    
+    # Скрипт отключения LED кольца
+    if [[ -f "$SCRIPT_DIR/disable_led_ring.py" ]]; then
+        sudo cp "$SCRIPT_DIR/disable_led_ring.py" /usr/local/bin/
+        sudo chmod +x /usr/local/bin/disable_led_ring.py
+        print_success "Скрипт отключения LED кольца установлен"
+    else
+        print_warning "disable_led_ring.py не найден в $SCRIPT_DIR"
+    fi
+    
+    # Скрипт настройки DSP
+    if [[ -f "$SCRIPT_DIR/respeaker-tune.sh" ]]; then
+        sudo cp "$SCRIPT_DIR/respeaker-tune.sh" /usr/local/bin/
+        sudo chmod +x /usr/local/bin/respeaker-tune.sh
+        print_success "Скрипт настройки DSP установлен"
+        
+        # Создание systemd сервиса для автоматической настройки DSP при загрузке
+        sudo tee /etc/systemd/system/respeaker-tune.service >/dev/null <<'EOF'
+[Unit]
+Description=Apply ReSpeaker USB Mic DSP tuning at boot
+After=sound.target multi-user.target
+Wants=sound.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/respeaker-tune.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        sudo systemctl daemon-reload
+        sudo systemctl enable respeaker-tune.service
+        print_success "Systemd сервис respeaker-tune.service создан и включен"
+    else
+        print_warning "respeaker-tune.sh не найден в $SCRIPT_DIR"
     fi
     
     # Создание скрипта respeaker_loopback.sh

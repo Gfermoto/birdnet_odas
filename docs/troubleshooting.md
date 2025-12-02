@@ -10,7 +10,8 @@
 2. [Ошибки MQTT подключения](#mqtt-errors)
 3. [Ошибки template_renderer в веб-интерфейсе](#template-errors)
 4. [Сетевые режимы Docker: host vs bridge](#network-modes)
-5. [Автоматическое обновление BirdNET-Go](#auto-update)
+5. [Проблемы с получением IP через DHCP (MikroTik)](#dhcp-timeout)
+6. [Автоматическое обновление BirdNET-Go](#auto-update)
 
 ---
 
@@ -523,6 +524,29 @@ docker stats birdnet-go
 # Использование диска
 docker system df
 ```
+
+---
+
+## Проблемы с получением IP через DHCP (MikroTik) {#dhcp-timeout}
+
+### Проблема
+
+Система не получает IP адрес через DHCP на MikroTik роутере, хотя линк мигает.
+
+### Решение
+
+Применить скрипт для увеличения DHCP таймаутов:
+
+```bash
+sudo bash scripts/fix_network_dhcp.sh
+```
+
+Скрипт:
+- Увеличивает DHCP таймаут до 120 секунд (было 45 секунд)
+- Увеличивает таймаут NetworkManager-wait-online до 180 секунд
+- Отключает may-fail - система будет ждать получения IP адреса
+
+**MAC адрес eth0:** `80:34:28:3c:c8:e8` - убедитесь, что на MikroTik настроена DHCP reservation для этого MAC адреса.
 
 ---
 
