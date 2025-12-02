@@ -554,93 +554,56 @@ sudo bash scripts/fix_network_dhcp.sh
 
 ### Обзор
 
-Настроена система автоматического обновления BirdNET-Go до самой свежей версии (latest или nightly, какая новее).
+Автоматическое обновление BirdNET-Go настроено через **Watchtower** — специализированный контейнер для мониторинга и обновления Docker образов.
 
-### Компоненты
+### Как работает Watchtower
 
-#### 1. Watchtower
-
-Watchtower отслеживает изменения в образе с текущим тегом (nightly) и обновляет контейнер при появлении новых версий.
+Watchtower отслеживает изменения в образе `ghcr.io/tphakala/birdnet-go:nightly` и автоматически обновляет контейнер при появлении новой версии.
 
 **Конфигурация:**
 - Проверка обновлений: каждые 24 часа
 - Автоматическая очистка старых образов
-- Включение остановленных контейнеров
 - Отслеживание контейнеров с label `com.centurylinklabs.watchtower.enable=true`
-
-#### 2. Systemd Timer + Скрипт
-
-Скрипт `/usr/local/bin/update_birdnet_latest.sh` автоматически:
-- Проверяет даты создания образов `latest` и `nightly`
-- Выбирает новее версию
-- Обновляет контейнер до выбранной версии
-
-**Расписание:**
-- Запуск: ежедневно в случайное время (с задержкой до 1 часа)
-- Таймер: `update-birdnet.timer`
+- Сохранение всех volumes и настроек контейнера
 
 ### Проверка статуса
 
 ```bash
-# Статус watchtower
+# Проверка что Watchtower работает
 docker ps | grep watchtower
+
+# Логи Watchtower
 docker logs watchtower | tail -20
 
-# Статус systemd timer
-systemctl status update-birdnet.timer
-systemctl list-timers | grep update-birdnet
-
-# Ручной запуск обновления
-/usr/local/bin/update_birdnet_latest.sh
+# Когда следующая проверка обновлений
+docker logs watchtower | grep "Scheduling first run"
 ```
-
-### Как это работает
-
-1. **Watchtower** проверяет обновления для образа с тегом `nightly` каждые 24 часа
-2. **Systemd timer** запускает скрипт ежедневно, который:
-   - Сравнивает даты создания `latest` и `nightly`
-   - Выбирает новее версию
-   - Обновляет контейнер, если найдена более новая версия
 
 ### Ручное обновление
 
 ```bash
-# Запустить скрипт обновления вручную
-/usr/local/bin/update_birdnet_latest.sh
+# Остановить контейнер
+docker stop birdnet-go
 
-# Или через systemd
-systemctl start update-birdnet.service
-```
+# Получить последнюю версию
+docker pull ghcr.io/tphakala/birdnet-go:nightly
 
-### Логи
-
-```bash
-# Логи watchtower
-docker logs watchtower
-
-# Логи systemd сервиса
-journalctl -u update-birdnet.service -f
-
-# Логи таймера
-journalctl -u update-birdnet.timer -f
+# Перезапустить (systemd сервис пересоздаст контейнер автоматически)
+systemctl restart birdnet-go
 ```
 
 ### Отключение автоматического обновления
 
 ```bash
-# Остановить watchtower
+# Остановить и удалить Watchtower
 docker stop watchtower
 docker rm watchtower
-
-# Отключить systemd timer
-systemctl stop update-birdnet.timer
-systemctl disable update-birdnet.timer
 ```
 
 **Примечания:**
-- Скрипт сохраняет все volumes и параметры запуска контейнера
-- Контейнер пересоздается с теми же настройками
 - При обновлении контейнер останавливается на несколько секунд
+- Все данные и настройки сохраняются в Docker volumes
+- Watchtower работает только с контейнерами, у которых есть label `com.centurylinklabs.watchtower.enable=true`
 
 ---
 
