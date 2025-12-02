@@ -133,7 +133,6 @@ python3 tuning.py FREEZEONOFF 0
 
 # Эхоподавление выключено (в поле не нужно)
 python3 tuning.py ECHOONOFF 0
-python3 tuning.py AECONOFF 0
 python3 tuning.py AECFREEZEONOFF 0
 python3 tuning.py NLAEC_MODE 0
 

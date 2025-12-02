@@ -77,7 +77,7 @@ python3 log_mmse_processor.py < input.raw > output.raw
 - `FRAME_SIZE = 1024` - размер FFT frame (лучшее частотное разрешение для птиц)
 - `HOP_SIZE = 512` - шаг между frames (50% overlap)
 - `ALPHA = 0.95` - Decision-Directed smoothing (для нестационарного шума)
-- `NOISE_FRAMES = 10` - количество frames для начальной оценки шума
+- `NOISE_FRAMES = 15` - количество frames для начальной оценки шума
 
 **Зависимости:** `python3-scipy`, `python3-numpy`
 

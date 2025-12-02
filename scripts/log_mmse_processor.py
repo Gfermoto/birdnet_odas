@@ -9,7 +9,7 @@ Amplitude Estimator) по Ephraim & Malah (1985).
 ---------
 1. Извлечение канала 0 из 6-канального interleaved потока
 2. STFT с frame_size=1024, hop_size=512, Hann window
-3. Оценка шума (адаптивная, первые 10 frames)
+3. Оценка шума (адаптивная, первые 15 frames)
 4. Вычисление a posteriori SNR: γ = |Y|² / λ
 5. Вычисление a priori SNR (Decision-Directed): ξ = α×G²×γ_prev + (1-α)×max(γ-1,0)
 6. Log-MMSE gain: G = (ξ/(1+ξ)) × exp(0.5 × E₁(ν)), где ν = (ξ/(1+ξ)) × γ
