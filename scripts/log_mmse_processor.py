@@ -23,10 +23,12 @@ Amplitude Estimator) по Ephraim & Malah (1985).
 
 Параметры:
 ----------
-FRAME_SIZE = 1024    # Размер FFT frame (оптимально для птиц 1-8 kHz)
-HOP_SIZE = 512      # Шаг между frames (50% overlap для плавного восстановления)
-ALPHA = 0.70         # Decision-Directed smoothing (баланс между подавлением шума и минимизацией музыкальных артефактов)
-NOISE_FRAMES = 15    # Количество frames для оценки шума (точная оценка с быстрой адаптацией)
+FRAME_SIZE = 1024              # Размер FFT frame (оптимально для птиц 1-8 kHz)
+HOP_SIZE = 512                 # Шаг между frames (50% overlap для плавного восстановления)
+ALPHA = 0.70                   # Decision-Directed smoothing (баланс шум/артефакты)
+NOISE_FRAMES = 15              # Количество frames для оценки шума
+MIN_GAIN = 0.1                 # Spectral floor для предотвращения музыкальных артефактов
+NOISE_ESTIMATE_ADAPT_ALPHA = 0.99  # Скорость адаптации шумовой модели (~3 сек)
 
 Использование:
 -------------
