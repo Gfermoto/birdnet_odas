@@ -142,10 +142,10 @@ python3 tuning.py NONSTATNOISEONOFF 1
 python3 tuning.py TRANSIENTONOFF 1
 
 # Параметры шумоподавления (оптимизировано для ветрового шума)
-python3 tuning.py GAMMA_NS_SR 2.5  # Усилено для стационарного шума
+python3 tuning.py GAMMA_NS_SR 2.4  # Усиленное подавление с балансом для минимизации артефактов
 python3 tuning.py GAMMA_NN_SR 1.1  # Не изменяется (firmware limitation)
-python3 tuning.py MIN_NS_SR 0.1    # Более глубокое подавление стационарного шума
-python3 tuning.py MIN_NN_SR 0.1    # Более глубокое подавление нестационарного шума (ветер)
+python3 tuning.py MIN_NS_SR 0.15   # Глубокое подавление стационарного шума с балансом для минимизации артефактов
+python3 tuning.py MIN_NN_SR 0.15   # Глубокое подавление нестационарного шума (ветер) с балансом для минимизации артефактов
 
 # AGC: включить с умеренным усилением (шум был из-за ресемплинга, а не усиления)
 python3 tuning.py AGCONOFF 1
