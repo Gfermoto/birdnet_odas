@@ -16,13 +16,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def disable_led_ring():
-    """Отключить LED кольцо на ReSpeaker"""
+    """Отключить LED кольцо на ReSpeaker (USB и GPIO версии)"""
     try:
-        from pixel_ring import PixelRing
-        p = PixelRing()
-        p.off()
-        logger.info("LED кольцо успешно отключено")
+        # Используем автоопределение версии (USB или GPIO)
+        from pixel_ring import pixel_ring
+        
+        # Проверяем что pixel_ring инициализирован
+        if pixel_ring is None:
+            logger.info("LED кольцо не найдено (pixel_ring is None)")
+            return False
+        
+        # Отключаем LED
+        pixel_ring.off()
+        logger.info(f"LED кольцо успешно отключено (тип: {type(pixel_ring).__name__})")
         return True
+        
     except ImportError:
         logger.warning(
             "Библиотека pixel-ring не установлена. "
@@ -30,24 +38,15 @@ def disable_led_ring():
         )
         logger.info("LED кольцо не будет отключено, но это не критично")
         return False
-    except AttributeError as e:
-        logger.warning(
-            f"Модель ReSpeaker может не поддерживать LED кольцо через pixel-ring: {e}"
-        )
-        logger.info("Продолжаем работу без отключения LED")
-        return False
     except Exception as e:
-        # Если устройство не найдено или LED кольцо не поддерживается
-        # - это не критичная ошибка
+        # Любая ошибка - не критична
         error_msg = str(e).lower()
         if any(keyword in error_msg for keyword in ['not found', 'no device', 'no such', 'unsupported']):
             logger.info(f"LED кольцо не найдено или не поддерживается: {e}")
-            logger.info("Это нормально для некоторых моделей ReSpeaker")
-            return False
         else:
             logger.warning(f"Ошибка при отключении LED кольца: {e}")
-            logger.info("Продолжаем работу без отключения LED")
-            return False
+        logger.info("Продолжаем работу без отключения LED")
+        return False
 
 if __name__ == "__main__":
     success = disable_led_ring()
