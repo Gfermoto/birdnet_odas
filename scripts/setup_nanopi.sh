@@ -117,7 +117,7 @@ if lsusb | grep -qi "seeed"; then
 # Права доступа к ReSpeaker USB
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", MODE="0666", GROUP="plugdev"
 
-# Отключить autosuspend для ReSpeaker (критично для стабильности!)
+# Отключить autosuspend для ReSpeaker (необходимо для стабильности)
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ATTR{idProduct}=="0018", TEST=="power/control", ATTR{power/control}="on"
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ATTR{idProduct}=="0018", TEST=="power/autosuspend", ATTR{power/autosuspend}="-1"
 
