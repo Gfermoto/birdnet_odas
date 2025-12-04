@@ -117,6 +117,10 @@ if lsusb | grep -qi "seeed"; then
 # Права доступа к ReSpeaker USB
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", MODE="0666", GROUP="plugdev"
 
+# Отключить autosuspend для ReSpeaker (критично для стабильности!)
+SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ATTR{idProduct}=="0018", TEST=="power/control", ATTR{power/control}="on"
+SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ATTR{idProduct}=="0018", TEST=="power/autosuspend", ATTR{power/autosuspend}="-1"
+
 # Автоматический запуск настройки DSP при подключении ReSpeaker
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ACTION=="add", RUN+="/bin/systemctl start respeaker-tune.service"
 EOF
