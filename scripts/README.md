@@ -68,8 +68,8 @@ python3 log_mmse_processor.py < input.raw > output.raw
 - Извлекает канал 0 (beamformed)
 - Применяет Log-MMSE шумоподавление:
   - STFT с frame_size=1024, hop_size=512, Hann window
-  - Decision-Directed a priori SNR estimation (alpha=0.95)
-  - Адаптивная оценка шума (первые 10 frames)
+  - Decision-Directed a priori SNR estimation (alpha=0.70)
+  - Адаптивная оценка шума (первые 15 frames)
   - Log-MMSE gain function с exponential integral
 - Выдает моно поток (16kHz, S16_LE)
 

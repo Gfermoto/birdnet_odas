@@ -26,7 +26,7 @@ for disk in /sys/block/sd*/queue/scheduler; do
     fi
 done
 if [ $SCHEDULER_SET -eq 0 ]; then
-    echo "   ⚠ I/O scheduler не настроен (диски не найдены)"
+    echo "   [WARNING] I/O scheduler не настроен (диски не найдены)"
 fi
 
 # 2. Увеличение лимитов файловых дескрипторов (безопасно)

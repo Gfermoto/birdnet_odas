@@ -542,7 +542,7 @@ underrun!!! (at least 39.702 ms long)
 
 ### Причина
 
-**USB autosuspend** отключает ReSpeaker через несколько секунд для экономии энергии. Это критическая проблема для realtime аудио обработки.
+**USB autosuspend** отключает ReSpeaker через несколько секунд для экономии энергии. Это серьезная проблема для realtime аудио обработки.
 
 ### Диагностика
 
@@ -590,7 +590,7 @@ sudo tee /etc/udev/rules.d/99-respeaker.rules > /dev/null << 'EOF'
 # Права доступа к ReSpeaker USB
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", MODE="0666", GROUP="plugdev"
 
-# Отключить autosuspend для ReSpeaker (критично для стабильности!)
+# Отключить autosuspend для ReSpeaker (необходимо для стабильности)
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ATTR{idProduct}=="0018", TEST=="power/control", ATTR{power/control}="on"
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ATTR{idProduct}=="0018", TEST=="power/autosuspend", ATTR{power/autosuspend}="-1"
 
@@ -643,7 +643,7 @@ systemctl status respeaker-loopback.service
 
 **Почему это происходит:**
 - Linux ядро по умолчанию включает USB autosuspend для экономии энергии
-- Для USB аудио устройств это критично, так как приводит к прерыванию потока
+- Для USB аудио устройств это важно, так как приводит к прерыванию потока
 - ReSpeaker особенно чувствителен к autosuspend из-за realtime характера работы
 
 **Другие устройства:**
