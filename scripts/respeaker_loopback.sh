@@ -40,6 +40,12 @@ update_stats() {
   "current_start_time": 0
 }
 EOF
+    else
+        # Обновить существующий файл, добавив недостающее поле current_start_time если его нет
+        if ! grep -q '"current_start_time"' "$STATS_FILE"; then
+            # Добавить поле перед закрывающей скобкой
+            sed -i 's/}$/  "current_start_time": 0\n}/' "$STATS_FILE" 2>/dev/null || true
+        fi
     fi
     
     # Обновить статистику (простая реализация через sed)
@@ -81,7 +87,9 @@ update_uptime_loop() {
             if [ "$current_start" -gt 0 ]; then
                 local now=$(date +%s)
                 local uptime=$((now - current_start))
-                update_stats uptime "$uptime"
+                if [ "$uptime" -gt 0 ]; then
+                    sed -i "s/\"uptime_seconds\": [0-9]*/\"uptime_seconds\": $uptime/" "$STATS_FILE" 2>/dev/null || true
+                fi
             fi
         fi
     done
