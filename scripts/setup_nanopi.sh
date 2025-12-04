@@ -114,7 +114,11 @@ if lsusb | grep -qi "seeed"; then
     
     # udev правила
     sudo tee /etc/udev/rules.d/99-respeaker.rules >/dev/null <<'EOF'
+# Права доступа к ReSpeaker USB
 SUBSYSTEM=="usb", ATTR{idVendor}=="2886", MODE="0666", GROUP="plugdev"
+
+# Автоматический запуск настройки DSP при подключении ReSpeaker
+SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ACTION=="add", RUN+="/bin/systemctl start respeaker-tune.service"
 EOF
     sudo udevadm control --reload-rules
     sudo udevadm trigger
@@ -161,17 +165,19 @@ EOF
         print_warning "disable_led_ring.py не найден в $SCRIPT_DIR"
     fi
     
-    # Скрипт настройки DSP
-    if [[ -f "$SCRIPT_DIR/respeaker-tune.sh" ]]; then
-        sudo cp "$SCRIPT_DIR/respeaker-tune.sh" /usr/local/bin/
-        sudo chmod +x /usr/local/bin/respeaker-tune.sh
-        print_success "Скрипт настройки DSP установлен"
+        # Скрипт настройки DSP
+        if [[ -f "$SCRIPT_DIR/respeaker-tune.sh" ]]; then
+            sudo cp "$SCRIPT_DIR/respeaker-tune.sh" /usr/local/bin/
+            sudo chmod +x /usr/local/bin/respeaker-tune.sh
+            # Создать директорию для логов
+            sudo mkdir -p /var/log
+            print_success "Скрипт настройки DSP установлен"
         
-        # Создание systemd сервиса для автоматической настройки DSP при загрузке
+        # Создание systemd сервиса для автоматической настройки DSP при загрузке и при подключении USB
         sudo tee /etc/systemd/system/respeaker-tune.service >/dev/null <<'EOF'
 [Unit]
-Description=Apply ReSpeaker USB Mic DSP tuning at boot
-After=sound.target multi-user.target
+Description=Apply ReSpeaker USB Mic DSP tuning at boot and on USB connect
+After=sound.target multi-user.target sys-subsystem-usb-devices.target
 Wants=sound.target
 
 [Service]
@@ -179,6 +185,8 @@ Type=oneshot
 User=root
 ExecStart=/usr/local/bin/respeaker-tune.sh
 RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target

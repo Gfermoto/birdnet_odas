@@ -78,8 +78,8 @@ python3 log_mmse_processor.py < input.raw > output.raw
 - `HOP_SIZE = 512` - шаг между frames (50% overlap)
 - `ALPHA = 0.70` - Decision-Directed smoothing, баланс между подавлением шума и минимизацией музыкальных артефактов
 - `NOISE_FRAMES = 15` - количество frames для начальной оценки шума
-- `MIN_GAIN = 0.1` - spectral floor (-20 dB), предотвращает музыкальные артефакты
-- `NOISE_ESTIMATE_ADAPT_ALPHA = 0.99` - скорость адаптации шумовой модели (~3 сек полного обновления)
+- `MIN_GAIN = 0.01` - spectral floor (-40 dB), агрессивное подавление шума
+- `NOISE_ESTIMATE_ADAPT_ALPHA = 0.995` - медленная адаптация шумовой модели для защиты от включения птиц в шум
 
 **Зависимости:** `python3-scipy`, `python3-numpy`
 

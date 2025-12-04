@@ -3,8 +3,24 @@
 # Параметры оптимизированы для записи птиц в полевых условиях
 # с балансом между подавлением шума и минимизацией артефактов
 
-set -e
-cd /root/usb_4_mic_array || exit 0
+# Логирование для отладки
+LOG_FILE="/var/log/respeaker-tune.log"
+exec >> "$LOG_FILE" 2>&1
+echo "=== $(date) ==="
+
+# Проверка наличия ReSpeaker
+if ! lsusb | grep -qi "2886.*seeed\|seeed.*2886"; then
+    echo "ReSpeaker не найден, выход"
+    exit 0
+fi
+
+# Небольшая задержка для инициализации USB устройства
+sleep 2
+
+cd /root/usb_4_mic_array || {
+    echo "Ошибка: директория /root/usb_4_mic_array не найдена"
+    exit 1
+}
 
 # Высокочастотный фильтр (HPF): 180 Гц - максимальное значение для подавления низкочастотного шума
 python3 tuning.py HPFONOFF 3
@@ -39,6 +55,15 @@ python3 tuning.py GAMMAVAD_SR 1000          # Очень высокий поро
 
 # Отключить LED кольцо для снижения энергопотребления и электромагнитных помех
 # Это особенно важно при использовании USB-изолятора B505S с ограниченным током (250 мА)
+echo "Отключение LED кольца..."
 if [ -f /usr/local/bin/disable_led_ring.py ]; then
-    python3 /usr/local/bin/disable_led_ring.py 2>/dev/null || true
+    if python3 /usr/local/bin/disable_led_ring.py; then
+        echo "LED кольцо успешно отключено"
+    else
+        echo "Предупреждение: не удалось отключить LED кольцо (возможно, pixel-ring не установлен)"
+    fi
+else
+    echo "Предупреждение: скрипт disable_led_ring.py не найден"
 fi
+
+echo "Настройка DSP завершена"
