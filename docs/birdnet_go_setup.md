@@ -343,6 +343,63 @@ docker exec -it birdnet-go ls -la /app/data/
 docker cp birdnet-go:/app/data/ ./birdnet-results/
 ```
 
+### Работа с базой данных
+
+BirdNET-Go хранит все детекции в SQLite базе данных `/data/birdnet.db` внутри контейнера.
+
+**Требования:** Для работы с базой данных на хосте установлен `sqlite3` (устанавливается автоматически через `setup_nanopi.sh`).
+
+**Копирование базы данных на хост:**
+
+```bash
+# Скопировать базу данных из контейнера
+docker cp birdnet-go:/data/birdnet.db /tmp/birdnet.db
+```
+
+**Просмотр статистики детекций:**
+
+```bash
+# Все найденные виды с количеством детекций
+sqlite3 /tmp/birdnet.db "SELECT DISTINCT common_name, COUNT(*) as count, ROUND(MAX(confidence), 3) as max_conf FROM notes GROUP BY common_name ORDER BY count DESC;"
+
+# Последние 20 детекций
+sqlite3 /tmp/birdnet.db "SELECT common_name, confidence, datetime(begin_time, 'localtime') as time FROM notes ORDER BY begin_time DESC LIMIT 20;" -header -column
+
+# Общее количество детекций
+sqlite3 /tmp/birdnet.db "SELECT COUNT(*) as total FROM notes;"
+```
+
+**Очистка базы данных:**
+
+```bash
+# Скопировать базу на хост
+docker cp birdnet-go:/data/birdnet.db /tmp/birdnet.db
+
+# Удалить все детекции
+sqlite3 /tmp/birdnet.db "DELETE FROM notes; DELETE FROM results; DELETE FROM note_reviews; DELETE FROM note_comments; VACUUM;"
+
+# Вернуть очищенную базу в контейнер
+docker cp /tmp/birdnet.db birdnet-go:/data/birdnet.db
+
+# Перезапустить контейнер для применения изменений
+docker restart birdnet-go
+```
+
+**Структура базы данных:**
+
+Основные таблицы:
+- `notes` - все детекции птиц (common_name, confidence, begin_time, end_time)
+- `results` - результаты анализа (связаны с notes через note_id)
+- `note_reviews` - проверки детекций
+- `note_comments` - комментарии к детекциям
+
+**Просмотр структуры таблиц:**
+
+```bash
+sqlite3 /tmp/birdnet.db ".tables"
+sqlite3 /tmp/birdnet.db "PRAGMA table_info(notes);"
+```
+
 ---
 
 ## 8. Устранение неполадок (приоритеты)

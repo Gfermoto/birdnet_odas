@@ -33,7 +33,7 @@ print_info "Ядро: $(uname -r)"
 # 2. Установка базовых зависимостей
 print_step "2. Установка базовых пакетов"
 sudo apt-get update
-sudo apt-get install -y curl ca-certificates wget netcat-openbsd git alsa-utils sox python3 python3-pip python3-scipy python3-numpy libusb-1.0-0
+sudo apt-get install -y curl ca-certificates wget netcat-openbsd git alsa-utils sox python3 python3-pip python3-scipy python3-numpy libusb-1.0-0 sqlite3
 
 # 3. Установка Docker с фиксами для M4B
 print_step "3. Установка Docker"
