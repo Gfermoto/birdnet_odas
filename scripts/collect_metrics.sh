@@ -27,7 +27,22 @@ STATS_FILE="/var/log/birdnet-pipeline/pipeline_stats.json"
 if [ -f "$STATS_FILE" ]; then
     RESTARTS=$(grep -o '"restarts": [0-9]*' "$STATS_FILE" | grep -o '[0-9]*' || echo "0")
     ERRORS=$(grep -o '"errors": [0-9]*' "$STATS_FILE" | grep -o '[0-9]*' || echo "0")
-    UPTIME=$(grep -o '"uptime_seconds": [0-9]*' "$STATS_FILE" | grep -o '[0-9]*' || echo "0")
+    UPTIME_STORED=$(grep -o '"uptime_seconds": [0-9]*' "$STATS_FILE" | grep -o '[0-9]*' || echo "0")
+    CURRENT_START=$(grep -o '"current_start_time": [0-9]*' "$STATS_FILE" | grep -o '[0-9]*' || echo "0")
+    
+    # Вычислить актуальный uptime если есть current_start_time
+    if [ "$CURRENT_START" -gt 0 ]; then
+        NOW=$(date +%s)
+        UPTIME_CALCULATED=$((NOW - CURRENT_START))
+        # Использовать большее значение (uptime может быть обновлен вручную или фоновым процессом)
+        if [ "$UPTIME_CALCULATED" -gt "$UPTIME_STORED" ]; then
+            UPTIME=$UPTIME_CALCULATED
+        else
+            UPTIME=$UPTIME_STORED
+        fi
+    else
+        UPTIME=$UPTIME_STORED
+    fi
 else
     RESTARTS=0
     ERRORS=0
