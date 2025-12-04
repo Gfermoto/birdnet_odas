@@ -40,7 +40,10 @@ systemctl status respeaker-loopback.service
 - Ресемплирует до 48kHz через SoX
 - Записывает в ALSA loopback device 1 (playback)
 - Логирует ошибки в `/var/log/birdnet-pipeline/errors.log`
-- Ведет статистику в `/var/log/birdnet-pipeline/pipeline_stats.json`
+- Ведет статистику в `/var/log/birdnet-pipeline/pipeline_stats.json`:
+  - Обновляет uptime каждые 30 секунд в реальном времени
+  - Отслеживает количество рестартов и ошибок
+  - Сохраняет время начала текущей сессии
 - Автоматически перезапускается при ошибках с экспоненциальной задержкой
 
 **Автозапуск:** Создается systemd сервис `respeaker-loopback.service` для автоматического запуска при загрузке.

@@ -415,6 +415,98 @@ aplay --buffer-size=8192 --period-size=2048
 
 ---
 
+## Мониторинг и статистика
+
+### Статистика пайплайна
+
+Скрипт `respeaker_loopback.sh` ведет статистику работы пайплайна в файле `/var/log/birdnet-pipeline/pipeline_stats.json`:
+
+```json
+{
+  "start_time": "2025-12-04 21:26:26",
+  "restarts": 0,
+  "errors": 0,
+  "last_error": "",
+  "last_restart": "2025-12-04 21:26:26",
+  "uptime_seconds": 300,
+  "current_start_time": 1764872786
+}
+```
+
+**Параметры:**
+- `start_time` - время первого запуска пайплайна
+- `restarts` - количество рестартов (увеличивается только при ошибках)
+- `errors` - количество ошибок
+- `last_error` - время последней ошибки
+- `last_restart` - время последнего рестарта
+- `uptime_seconds` - время работы текущей сессии в секундах (обновляется каждые 30 секунд)
+- `current_start_time` - Unix timestamp начала текущей сессии
+
+**Обновление статистики:**
+- Uptime обновляется автоматически каждые 30 секунд фоновым процессом
+- Рестарты и ошибки обновляются при возникновении событий
+- Статистика создается автоматически при первом запуске
+
+**Проверка статистики:**
+```bash
+cat /var/log/birdnet-pipeline/pipeline_stats.json | python3 -m json.tool
+```
+
+### Метрики производительности
+
+Система автоматически собирает метрики производительности каждые 5 минут через `collect-metrics.timer`:
+
+**Файлы метрик:** `/var/log/birdnet-pipeline/metrics/YYYYMMDD.json`
+
+**Собираемые метрики:**
+- CPU использование (общее и по процессам: arecord, log_mmse, sox, aplay)
+- Использование памяти (общее и по процессам)
+- Load average
+- Статистика пайплайна (restarts, errors, uptime_seconds)
+
+**Формат записи:**
+```json
+{
+  "timestamp": "2025-12-04 21:30:00",
+  "cpu": {
+    "total": 14.7,
+    "arecord": 0.1,
+    "log_mmse": 7.4,
+    "sox": 1.0,
+    "aplay": 0.2
+  },
+  "memory": {
+    "total": 38.0,
+    "arecord": 0.1,
+    "log_mmse": 3.9
+  },
+  "load": 0.57,
+  "pipeline": {
+    "restarts": 0,
+    "errors": 0,
+    "uptime_seconds": 300
+  }
+}
+```
+
+**Проверка метрик:**
+```bash
+# Последние метрики за сегодня
+tail -1 /var/log/birdnet-pipeline/metrics/$(date +%Y%m%d).json | python3 -m json.tool
+
+# Количество записей за сегодня
+grep -c '^{' /var/log/birdnet-pipeline/metrics/$(date +%Y%m%d).json
+
+# Статус сбора метрик
+systemctl status collect-metrics.timer
+```
+
+**Ограничение размера:**
+- Файлы метрик автоматически ограничиваются до последних 1000 записей
+- Старые файлы сохраняются по дням для анализа трендов
+
+---
+
 ## Устранение неполадок
 
 ### Проблема: Нет звука в BirdNET-Go
