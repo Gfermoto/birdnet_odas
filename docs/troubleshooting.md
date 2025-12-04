@@ -527,6 +527,131 @@ docker system df
 
 ---
 
+## ReSpeaker отключается / ошибки "No such device" {#usb-autosuspend}
+
+### Проблема
+
+Аудио пайплайн постоянно перезапускается, в логах ошибки:
+```
+arecord: pcm_read:2240: read error: No such device
+overrun!!! (at least 1495.620 ms long)
+underrun!!! (at least 39.702 ms long)
+```
+
+Статистика показывает множество перезапусков (например, 101 раз за 14 минут) с коротким uptime (2-3 секунды).
+
+### Причина
+
+**USB autosuspend** отключает ReSpeaker через несколько секунд для экономии энергии. Это критическая проблема для realtime аудио обработки.
+
+### Диагностика
+
+Проверьте настройки USB autosuspend для ReSpeaker:
+
+```bash
+# Найти USB устройство ReSpeaker
+lsusb | grep -i seeed
+# Вывод: Bus 003 Device 002: ID 2886:0018 Seeed Technology Inc. ReSpeaker 4 Mic Array (UAC1.0)
+
+# Найти путь в /sys
+ls -la /sys/bus/usb/devices/ | grep 2886
+
+# Проверить настройки autosuspend (например, для 3-1)
+cat /sys/bus/usb/devices/3-1/power/autosuspend
+cat /sys/bus/usb/devices/3-1/power/control
+
+# Если autosuspend = 2 (или другое малое значение), это проблема!
+# Правильные значения: autosuspend=-1, control=on
+```
+
+### Решение 1: Немедленное исправление (временное)
+
+Отключить autosuspend для текущей сессии:
+
+```bash
+# Найти устройство (замените 3-1 на ваш путь)
+USB_DEVICE=$(ls -d /sys/bus/usb/devices/*-* | xargs -I {} sh -c 'grep -q "2886" {}/idVendor 2>/dev/null && echo {}' | head -1)
+
+# Отключить autosuspend
+echo -1 | sudo tee $USB_DEVICE/power/autosuspend
+echo on | sudo tee $USB_DEVICE/power/control
+
+# Проверить
+cat $USB_DEVICE/power/autosuspend  # Должно быть: -1
+cat $USB_DEVICE/power/control      # Должно быть: on
+```
+
+### Решение 2: Постоянное исправление через udev правила
+
+Создать udev правила для автоматического отключения autosuspend:
+
+```bash
+sudo tee /etc/udev/rules.d/99-respeaker.rules > /dev/null << 'EOF'
+# Права доступа к ReSpeaker USB
+SUBSYSTEM=="usb", ATTR{idVendor}=="2886", MODE="0666", GROUP="plugdev"
+
+# Отключить autosuspend для ReSpeaker (критично для стабильности!)
+SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ATTR{idProduct}=="0018", TEST=="power/control", ATTR{power/control}="on"
+SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ATTR{idProduct}=="0018", TEST=="power/autosuspend", ATTR{power/autosuspend}="-1"
+
+# Автоматический запуск настройки DSP при подключении ReSpeaker
+SUBSYSTEM=="usb", ATTR{idVendor}=="2886", ACTION=="add", RUN+="/bin/systemctl start respeaker-tune.service"
+EOF
+
+# Применить правила
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+
+# Или перезагрузить систему
+sudo reboot
+```
+
+### Решение 3: Глобальное отключение USB autosuspend
+
+Если проблема сохраняется, отключите autosuspend для всех USB устройств:
+
+```bash
+# Через udev правило
+echo 'ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="on"' | \
+  sudo tee /etc/udev/rules.d/99-usb-autosuspend-off.rules
+
+# Применить
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+### Проверка исправления
+
+После применения решения проверьте стабильность:
+
+```bash
+# Проверить логи пайплайна (не должно быть "No such device")
+tail -f /var/log/birdnet-pipeline/errors.log
+
+# Проверить статистику (uptime должен расти)
+watch -n 5 'journalctl -u respeaker-loopback.service --no-pager --since "1 min ago" | tail -5'
+
+# Проверить статус службы
+systemctl status respeaker-loopback.service
+```
+
+**Ожидаемый результат:**
+- Ошибки "No such device" исчезли
+- Пайплайн работает стабильно (uptime > 10 минут)
+- Только микроскопические underrun 0.01-0.02ms (норма для realtime аудио)
+
+### Дополнительная информация
+
+**Почему это происходит:**
+- Linux ядро по умолчанию включает USB autosuspend для экономии энергии
+- Для USB аудио устройств это критично, так как приводит к прерыванию потока
+- ReSpeaker особенно чувствителен к autosuspend из-за realtime характера работы
+
+**Другие устройства:**
+- Эта проблема может затрагивать любые USB аудио устройства
+- Для других устройств замените `idVendor` и `idProduct` в udev правилах
+
+---
+
 ## Проблемы с получением IP через DHCP (MikroTik) {#dhcp-timeout}
 
 ### Проблема
