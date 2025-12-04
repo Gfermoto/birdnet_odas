@@ -43,8 +43,12 @@ EOF
     else
         # Обновить существующий файл, добавив недостающее поле current_start_time если его нет
         if ! grep -q '"current_start_time"' "$STATS_FILE"; then
-            # Добавить поле перед закрывающей скобкой
-            sed -i 's/}$/  "current_start_time": 0\n}/' "$STATS_FILE" 2>/dev/null || true
+            # Добавить поле перед закрывающей скобкой с запятой
+            sed -i 's/"uptime_seconds": [0-9]*/"uptime_seconds": 0,\n  "current_start_time": 0/' "$STATS_FILE" 2>/dev/null || true
+            # Если не получилось через sed, попробуем другой способ
+            if ! grep -q '"current_start_time"' "$STATS_FILE"; then
+                sed -i 's/}$/,\n  "current_start_time": 0\n}/' "$STATS_FILE" 2>/dev/null || true
+            fi
         fi
     fi
     
