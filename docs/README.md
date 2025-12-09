@@ -1,69 +1,91 @@
-# NanoPi M4B: BirdNET-Go + USB-микрофон
-
-## Документация
-
-Документация разделена на три основных раздела:
-
-### 1. Микрофон
-
-**[respeaker_usb4mic_setup.md](respeaker_usb4mic_setup.md)** — настройка ReSpeaker USB 4-Mic Array
-- Прошивка 6-канальной firmware
-- DSP настройки для птиц (HPF, шумоподавление, AGC)
-- Оптимизация параметров для полевых условий
-- Физическая защита (ветрозащита, ферритовый фильтр)
-
-### 2. Пайплайн обработки
-
-**[audio_pipeline.md](audio_pipeline.md)** — полный аудио пайплайн и алгоритм фильтрации
-- Архитектура пайплайна (ReSpeaker → Log-MMSE → SoX → Loopback → BirdNET-Go)
-- Алгоритм Log-MMSE шумоподавления (математические основы)
-- Ресемплинг SoX (16kHz → 48kHz)
-- ALSA Loopback устройство
-- Производительность и оптимизация
-- Мониторинг и статистика (статистика пайплайна, метрики производительности)
-
-### 3. BirdNET-Go
-
-**[birdnet_go_setup.md](birdnet_go_setup.md)** — установка и настройка BirdNET-Go
-- Docker установка
-- Фиксы для NanoPi M4B (iptables-legacy, fuse-overlayfs)
-- Настройка аудио устройства
-- Встроенные фильтры (HPF, LPF)
-- Автозапуск
-
-**[troubleshooting.md](troubleshooting.md)** — устранение неполадок
-- DNS timeout при загрузке на BirdWeather
-- Ошибки MQTT подключения
-- Ошибки template_renderer в веб-интерфейсе
-- Сетевые режимы Docker: host vs bridge
-- Общие команды диагностики
-
-**[docker_compose_guide.md](docker_compose_guide.md)** — использование Docker Compose
-- Быстрый старт с docker-compose
-- Управление контейнером через compose
-- Миграция с существующего контейнера
-- Конфигурация и переменные окружения
-
+# Документация BirdNET-ODAS
 
 ## Быстрый старт
 
+### Raspberry Pi
+
 ```bash
-# 1. Установить Docker и BirdNET-Go
-curl -fsSL https://github.com/tphakala/birdnet-go/raw/main/install.sh -o install.sh
-bash ./install.sh
-
-# 2. Настроить USB-микрофон (если ReSpeaker)
-git clone https://github.com/respeaker/usb_4_mic_array.git
-cd usb_4_mic_array
-sudo python3 dfu.py --download 6_channels_firmware.bin
-
-# 3. Открыть Web GUI
-http://IP_АДРЕС:8080
+cd ~/birdnet_odas/platforms/raspberry-pi
+bash setup.sh
 ```
 
-## Файлы
+См. [platforms/raspberry-pi/README.md](../platforms/raspberry-pi/README.md)
 
-- docs/ — вся документация
-- scripts/ — утилиты (установщик, тест микрофона)
-- config/ — (пусто, не требуется)
+### NanoPi M4B
 
+```bash
+cd ~/birdnet_odas/platforms/nanopi-m4b
+bash setup.sh
+```
+
+## Компоненты системы
+
+### 1. ReSpeaker USB микрофон
+
+[respeaker_usb4mic_setup.md](respeaker_usb4mic_setup.md)
+
+- Прошивка 6-канальной firmware
+- DSP настройки (HPF, AGC, шумоподавление)
+- Оптимизация для полевых условий
+
+### 2. Аудио-пайплайн
+
+[audio_pipeline.md](audio_pipeline.md)
+
+Полный пайплайн обработки:
+```
+ReSpeaker → Log-MMSE → SoX → Loopback → BirdNET-Go
+```
+
+- Log-MMSE шумоподавление
+- Ресемплинг 16kHz → 48kHz
+- ALSA Loopback устройство
+- Производительность и метрики
+
+### 3. BirdNET-Go
+
+[birdnet_go_setup.md](birdnet_go_setup.md)
+
+- Docker установка
+- Конфигурация
+- Встроенные фильтры
+- Автозапуск
+
+### 4. Docker Compose
+
+[docker_compose_guide.md](docker_compose_guide.md)
+
+- Быстрый старт
+- Управление контейнером
+- Миграция
+
+### 5. Troubleshooting
+
+[troubleshooting.md](troubleshooting.md)
+
+- Проблемы Docker
+- Проблемы аудио
+- Проблемы сети
+- Диагностика
+
+## Структура проекта
+
+```
+birdnet_odas/
+├── platforms/
+│   ├── common/              # Универсальные скрипты
+│   ├── raspberry-pi/        # Raspberry Pi setup
+│   └── nanopi-m4b/          # NanoPi M4B setup
+├── scripts/                 # Утилиты
+├── docs/                    # Документация
+└── docker-compose.yml
+```
+
+## Утилиты (scripts/)
+
+См. [scripts/README.md](../scripts/README.md)
+
+- Диагностика аудио
+- Сбор метрик
+- Оптимизация производительности
+- Фиксы конфигурации
