@@ -125,11 +125,11 @@ while true; do
     log_info "Запуск аудио пайплайна"
     
     # Запустить пайплайн с логированием ошибок
-    if arecord -D hw:ArrayUAC10,0 -f S16_LE -r 16000 -c 6 -t raw --buffer-size=8192 --period-size=2048 2>>"$ERROR_LOG" | \
+    if arecord -D hw:ArrayUAC10,0 -f S16_LE -r 16000 -c 6 -t raw --buffer-size=65536 --period-size=16384 2>>"$ERROR_LOG" | \
        python3 /usr/local/bin/log_mmse_processor.py 2>>"$ERROR_LOG" | \
        sox -t raw -r 16000 -c 1 -e signed-integer -b 16 -L - \
            -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - gain -2.0 2>>"$ERROR_LOG" | \
-       aplay -D hw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw --buffer-size=8192 --period-size=2048 2>>"$ERROR_LOG"; then
+       aplay -D plughw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw --buffer-size=65536 --period-size=16384 2>>"$ERROR_LOG"; then
         
         # Успешный запуск - сбросить счетчик ошибок
         ERROR_COUNT=0

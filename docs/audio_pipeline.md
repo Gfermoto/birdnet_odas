@@ -65,7 +65,7 @@ while true; do
     python3 /usr/local/bin/log_mmse_processor.py | \
     sox -t raw -r 16000 -c 1 -e signed-integer -b 16 -L - \
         -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - gain -2.0 | \
-    aplay -D hw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw 2>/dev/null || sleep 1
+    aplay -D plughw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw 2>/dev/null || sleep 1
 done
 ```
 
@@ -100,7 +100,7 @@ done
 
 4. **Запись в ALSA Loopback:**
    ```bash
-   aplay -D hw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw
+   aplay -D plughw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw
    ```
    - `hw:2,1,0` - loopback card 2, device 1 (playback), subdevice 0
    - Записывает в виртуальное устройство
@@ -337,27 +337,25 @@ echo "options snd-aloop id=ACapture index=2" > /etc/modprobe.d/snd-aloop.conf
 
 ### ALSA буферы
 
-Для стабильной работы аудио пайплайна используются увеличенные буферы:
+Для стабильной работы аудио пайплайна используются увеличенные буферы (после боевых тестов с underrun/overrun):
 
 ```bash
-arecord --buffer-size=8192 --period-size=2048
-aplay --buffer-size=8192 --period-size=2048
+arecord --buffer-size=65536 --period-size=16384
+aplay --buffer-size=65536 --period-size=16384
 ```
 
 **Параметры:**
-- `buffer-size=8192` - размер общего буфера (8192 samples)
-- `period-size=2048` - размер одного периода (2048 samples)
-- Соотношение: 4 периода в буфере (8192 / 2048 = 4)
+- `buffer-size=65536` - размер общего буфера
+- `period-size=16384` - размер одного периода
+- Соотношение: 4 периода в буфере
 
 **Зачем нужны большие буферы:**
-- Предотвращение underrun/overrun при загрузке CPU
+- Предотвращение underrun/overrun при нагрузке и требовательном loopback
 - Стабильность при обработке через Log-MMSE и SoX
-- Снижение количества прерываний
-- Защита от щелчков и пропусков
+- Снижение количества прерываний, отсутствие "Broken pipe"
 
 **Латентность от буферов:**
-- При 48kHz: 8192 samples = ~170 мс
-- Это приемлемо для распознавания птиц (не критично к задержке)
+- При 48kHz: 65536 samples ≈ 1.36 с (4×16384). Для оффлайн-детекции птиц задержка некритична; стабильность приоритетна.
 
 ### Адресация устройств ALSA
 
@@ -376,10 +374,9 @@ aplay --buffer-size=8192 --period-size=2048
 3. **default**
    - Устройство по умолчанию (из `/etc/asound.conf` или системное)
 
-**Почему мы используем hw:, а не plughw:**
-- Полный контроль над форматом и частотой дискретизации
-- Ресемплинг выполняется явно через SoX (лучшее качество)
-- Избегание двойного ресемплинга (ReSpeaker 16kHz → ALSA plug 48kHz → SoX)
+**Почему мы используем hw: и plughw::**
+- `arecord` — `hw:ArrayUAC10,0` для точного формата 16k/6ch без скрытых преобразований.
+- `aplay` — `plughw:2,1,0` чтобы ALSA согласовала формат loopback playback (устранено "Sample format non available"); ресемплинг остаётся в SoX, plug нужен лишь для совместимости.
 
 ### Использование в BirdNET-Go
 

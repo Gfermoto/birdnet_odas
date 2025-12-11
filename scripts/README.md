@@ -35,6 +35,11 @@ systemctl status respeaker-loopback.service
 3. SoX resample (48kHz, 1ch)
 4. ALSA loopback
 
+**Ключевые параметры (устойчивость):**
+- `arecord --buffer-size=65536 --period-size=16384`
+- `aplay  -D plughw:2,1,0 --buffer-size=65536 --period-size=16384`
+- Формат: S16_LE → S16_LE; plughw включён только на playback для совместимости с loopback.
+
 **Логи:**
 - Ошибки: `/var/log/birdnet-pipeline/errors.log`
 - Статистика: `/var/log/birdnet-pipeline/pipeline_stats.json`
