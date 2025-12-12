@@ -461,38 +461,20 @@ cat /var/log/birdnet-pipeline/pipeline_stats.json | python3 -m json.tool
 - Load average
 - Статистика пайплайна (restarts, errors, uptime_seconds)
 
-**Формат записи:**
+**Формат записи (NDJSON - одна строка = один JSON объект):**
 ```json
-{
-  "timestamp": "2025-12-04 21:30:00",
-  "cpu": {
-    "total": 14.7,
-    "arecord": 0.1,
-    "log_mmse": 7.4,
-    "sox": 1.0,
-    "aplay": 0.2
-  },
-  "memory": {
-    "total": 38.0,
-    "arecord": 0.1,
-    "log_mmse": 3.9
-  },
-  "load": 0.57,
-  "pipeline": {
-    "restarts": 0,
-    "errors": 0,
-    "uptime_seconds": 300
-  }
-}
+{"timestamp":"2025-12-04 21:30:00","cpu":{"total":14.7,"arecord":0.1,"log_mmse":7.4,"sox":1.0,"aplay":0.2},"memory":{"total":38.0,"arecord":0.1,"log_mmse":3.9},"load":0.57,"pipeline":{"restarts":0,"errors":0,"uptime_seconds":300}}
 ```
+
+Каждая строка файла - отдельный валидный JSON объект (NDJSON формат), что упрощает добавление записей и предотвращает повреждение файла при обрезке.
 
 **Проверка метрик:**
 ```bash
-# Последние метрики за сегодня
+# Последние метрики за сегодня (форматированный вывод)
 tail -1 /var/log/birdnet-pipeline/metrics/$(date +%Y%m%d).json | python3 -m json.tool
 
 # Количество записей за сегодня
-grep -c '^{' /var/log/birdnet-pipeline/metrics/$(date +%Y%m%d).json
+wc -l /var/log/birdnet-pipeline/metrics/$(date +%Y%m%d).json
 
 # Статус сбора метрик
 systemctl status collect-metrics.timer
