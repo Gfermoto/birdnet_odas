@@ -9,24 +9,24 @@
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'15px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 graph TB
-    subgraph HW["<b>⚡ АППАРАТНЫЙ СЛОЙ</b>"]
-        A["<b>🎤 ReSpeaker USB 4 Mic Array</b><br/><small>4× MEMS микрофона<br/>USB Audio Class 1.0<br/>Beamforming · AGC · DSP</small>"]
-        B["<b>🖥️ Одноплатный компьютер</b><br/><small>Raspberry Pi 4/5 · NanoPi M4B<br/>ARM64 · 4GB RAM · Docker</small>"]
+    subgraph HW["<b>АППАРАТНЫЙ СЛОЙ</b>"]
+        A["<b>ReSpeaker USB 4 Mic Array</b><br/><small>4× MEMS микрофона<br/>USB Audio Class 1.0<br/>Beamforming · AGC · DSP</small>"]
+        B["<b>Одноплатный компьютер</b><br/><small>Raspberry Pi 4/5 · NanoPi M4B<br/>ARM64 · 4GB RAM · Docker</small>"]
     end
     
-    subgraph SW["<b>🔧 ПРОГРАММНЫЙ СЛОЙ</b>"]
-        C["<b>📊 ALSA + DSP</b><br/><small>HPF 180Hz · AGC<br/>Noise Reduction</small>"]
-        D["<b>🔬 Log-MMSE Processor</b><br/><small>Python 3.8+<br/>MIN_GAIN: 0.15<br/>STFT 1024</small>"]
-        E["<b>⚙️ SoX Resample</b><br/><small>16→48 kHz<br/>Gain +8dB<br/>HQ Algorithm</small>"]
-        F["<b>🔄 ALSA Loopback</b><br/><small>Virtual Audio Device<br/>snd-aloop module</small>"]
-        G["<b>🧠 BirdNET-Go</b><br/><small>Docker Container<br/>Neural Network<br/>6K+ Species</small>"]
+    subgraph SW["<b>ПРОГРАММНЫЙ СЛОЙ</b>"]
+        C["<b>ALSA + DSP</b><br/><small>HPF 180Hz · AGC<br/>Noise Reduction</small>"]
+        D["<b>Log-MMSE Processor</b><br/><small>Python 3.8+<br/>MIN_GAIN: 0.15<br/>STFT 1024</small>"]
+        E["<b>SoX Resample</b><br/><small>16→48 kHz<br/>Gain +8dB<br/>HQ Algorithm</small>"]
+        F["<b>ALSA Loopback</b><br/><small>Virtual Audio Device<br/>snd-aloop module</small>"]
+        G["<b>BirdNET-Go</b><br/><small>Docker Container<br/>Neural Network<br/>6K+ Species</small>"]
     end
     
-    subgraph OUT["<b>📤 ВЫХОДНОЙ СЛОЙ</b>"]
-        H["<b>🌐 Веб-интерфейс</b><br/><small>:8080 · Dashboard</small>"]
-        I["<b>📡 MQTT</b><br/><small>Home Assistant</small>"]
-        J["<b>🌍 BirdWeather</b><br/><small>Публичная станция</small>"]
-        K["<b>💾 SQLite DB</b><br/><small>История детекций</small>"]
+    subgraph OUT["<b>ВЫХОДНОЙ СЛОЙ</b>"]
+        H["<b>Веб-интерфейс</b><br/><small>:8080 · Dashboard</small>"]
+        I["<b>MQTT</b><br/><small>Home Assistant</small>"]
+        J["<b>BirdWeather</b><br/><small>Публичная станция</small>"]
+        K["<b>SQLite DB</b><br/><small>История детекций</small>"]
     end
     
     A -->|"<small>USB Audio</small>"| B
@@ -60,32 +60,32 @@ graph TB
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 flowchart LR
-    subgraph IN["<b>📥 INPUT</b>"]
+    subgraph IN["<b>INPUT</b>"]
         direction TB
-        A["<b>🎤 ReSpeaker USB</b><br/><small>16 kHz<br/>6 channels<br/>interleaved</small>"]
+        A["<b>ReSpeaker USB</b><br/><small>16 kHz<br/>6 channels<br/>interleaved</small>"]
     end
     
-    subgraph PROC["<b>⚙️ PROCESSING PIPELINE</b>"]
+    subgraph PROC["<b>PROCESSING PIPELINE</b>"]
         direction TB
-        B["<b>1️⃣ arecord</b><br/><small>Audio Capture<br/>buffer: 32768</small>"]
-        C["<b>2️⃣ Log-MMSE</b><br/><small>Noise Reduction<br/>STFT 1024<br/>MIN_GAIN: 0.15</small>"]
-        D["<b>3️⃣ SoX</b><br/><small>Resample 48kHz<br/>Gain: +8dB<br/>Quality: VHQ</small>"]
-        E["<b>4️⃣ aplay</b><br/><small>Loopback Write<br/>hw:2,1,0</small>"]
+        B["<b>Stage 1: arecord</b><br/><small>Audio Capture<br/>buffer: 32768</small>"]
+        C["<b>Stage 2: Log-MMSE</b><br/><small>Noise Reduction<br/>STFT 1024<br/>MIN_GAIN: 0.15</small>"]
+        D["<b>Stage 3: SoX</b><br/><small>Resample 48kHz<br/>Gain: +8dB<br/>Quality: VHQ</small>"]
+        E["<b>Stage 4: aplay</b><br/><small>Loopback Write<br/>hw:2,1,0</small>"]
     end
     
-    subgraph LOOP["<b>🔄 VIRTUAL</b>"]
+    subgraph LOOP["<b>VIRTUAL</b>"]
         direction TB
-        F["<b>🔁 ALSA Loopback</b><br/><small>snd-aloop<br/>48 kHz · mono</small>"]
+        F["<b>ALSA Loopback</b><br/><small>snd-aloop<br/>48 kHz · mono</small>"]
     end
     
-    subgraph AI["<b>🧠 RECOGNITION</b>"]
+    subgraph AI["<b>RECOGNITION</b>"]
         direction TB
-        G["<b>🤖 BirdNET-Go</b><br/><small>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s</small>"]
+        G["<b>BirdNET-Go</b><br/><small>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s</small>"]
     end
     
-    subgraph OUTDATA["<b>📤 OUTPUT</b>"]
+    subgraph OUTDATA["<b>OUTPUT</b>"]
         direction TB
-        H["<b>📊 Детекции</b><br/><small>+ clips<br/>+ spectrograms</small>"]
+        H["<b>Детекции</b><br/><small>+ clips<br/>+ spectrograms</small>"]
     end
     
     A ==>|"<small>pipe</small>"| B
@@ -121,21 +121,21 @@ flowchart LR
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 flowchart TD
-    START["<b>▶️ Входной аудиосигнал</b><br/><small>16 kHz · mono</small>"]
-    STFT["<b>📊 STFT</b><br/><small>Hann Window<br/>Frame: 1024<br/>Hop: 512</small>"]
-    CHECK{{"<b>⚡ Обучение?</b><br/><small>Первые 15 кадров</small>"}}
-    NOISE["<b>🔍 Оценка шума</b><br/><small>λ(ω) = mean(|Y(ω,t)|²)</small>"]
-    SNR["<b>📈 SNR расчет</b><br/><small>γ = |Y|² / λ<br/>ξ = α×G²×γ + (1-α)×max(γ-1,0)</small>"]
-    GAIN["<b>🎯 Log-MMSE Gain</b><br/><small>G = (ξ/(1+ξ)) × exp(0.5×E₁(ν))</small>"]
-    APPLY["<b>✨ Применение</b><br/><small>Ŷ = G × Y</small>"]
-    LIMIT["<b>🛡️ Soft Limiter</b><br/><small>tanh(x × 0.95)</small>"]
-    ISTFT["<b>🔄 ISTFT</b><br/><small>Overlap-add<br/>Нормализация</small>"]
-    END["<b>✅ Выходной сигнал</b><br/><small>16 kHz · mono</small>"]
+    START["<b>INPUT: Аудиосигнал</b><br/><small>16 kHz · mono</small>"]
+    STFT["<b>STFT Transform</b><br/><small>Hann Window<br/>Frame: 1024<br/>Hop: 512</small>"]
+    CHECK{{"<b>Training Phase?</b><br/><small>First 15 frames</small>"}}
+    NOISE["<b>Noise Estimation</b><br/><small>λ(ω) = mean(|Y(ω,t)|²)</small>"]
+    SNR["<b>SNR Calculation</b><br/><small>γ = |Y|² / λ<br/>ξ = α×G²×γ + (1-α)×max(γ-1,0)</small>"]
+    GAIN["<b>Log-MMSE Gain</b><br/><small>G = (ξ/(1+ξ)) × exp(0.5×E₁(ν))</small>"]
+    APPLY["<b>Apply Gain</b><br/><small>Ŷ = G × Y</small>"]
+    LIMIT["<b>Soft Limiter</b><br/><small>tanh(x × 0.95)</small>"]
+    ISTFT["<b>ISTFT Transform</b><br/><small>Overlap-add<br/>Нормализация</small>"]
+    END["<b>OUTPUT: Чистый сигнал</b><br/><small>16 kHz · mono</small>"]
     
     START ==> STFT
     STFT ==> CHECK
-    CHECK ==>|"<small>ДА</small>"| NOISE
-    CHECK ==>|"<small>НЕТ</small>"| SNR
+    CHECK ==>|"<small>YES</small>"| NOISE
+    CHECK ==>|"<small>NO</small>"| SNR
     NOISE ==> SNR
     SNR ==> GAIN
     GAIN ==> APPLY
@@ -165,36 +165,36 @@ flowchart TD
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'13px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 flowchart TD
-    START(["<b>🚀 НАЧАЛО</b>"])
-    CLONE["<b>📦 Клонирование</b><br/><small>git clone repo</small>"]
-    CHOICE{{"<b>🖥️ Платформа?</b>"}}
-    RPI["<b>🍓 Raspberry Pi</b><br/><small>cd platforms/raspberry-pi</small>"]
-    NANO["<b>🔷 NanoPi M4B</b><br/><small>cd platforms/nanopi-m4b</small>"]
-    SETUP["<b>⚙️ Запуск setup.sh</b><br/><small>sudo bash setup.sh</small>"]
-    DEPS["<b>📥 Установка зависимостей</b><br/><small>Docker · Python · SoX · ALSA</small>"]
-    CHECK{{"<b>🎤 ReSpeaker?</b>"}}
-    RESP["<b>🔧 Настройка ReSpeaker</b><br/><small>DSP · Tuning · udev</small>"]
-    SKIP["<b>⏭️ Пропуск</b>"]
-    PIPE["<b>🔊 Аудио пайплайн</b><br/><small>Log-MMSE · SoX · Loopback</small>"]
-    SRVS["<b>🔄 Systemd сервисы</b><br/><small>respeaker-tune<br/>respeaker-loopback</small>"]
-    DOCKER["<b>🐳 BirdNET-Go Docker</b><br/><small>docker-compose up -d</small>"]
-    OPT["<b>🎯 Оптимизация</b><br/><small>Permissions · USB · Timezone</small>"]
-    RELOG{{"<b>🔄 Перелогин</b>"}}
-    VERIFY["<b>✅ Проверка</b><br/><small>docker ps<br/>systemctl status</small>"]
-    WORKS{{"<b>💚 Работает?</b>"}}
-    SUCCESS(["<b>🎉 ГОТОВО!</b><br/><small>http://IP:8080</small>"])
-    TROUBLE["<b>⚠️ Troubleshooting</b><br/><small>Логи · Диагностика</small>"]
+    START(["<b>START</b>"])
+    CLONE["<b>Clone Repository</b><br/><small>git clone repo</small>"]
+    CHOICE{{"<b>Platform?</b>"}}
+    RPI["<b>Raspberry Pi</b><br/><small>cd platforms/raspberry-pi</small>"]
+    NANO["<b>NanoPi M4B</b><br/><small>cd platforms/nanopi-m4b</small>"]
+    SETUP["<b>Run setup.sh</b><br/><small>sudo bash setup.sh</small>"]
+    DEPS["<b>Install Dependencies</b><br/><small>Docker · Python · SoX · ALSA</small>"]
+    CHECK{{"<b>ReSpeaker Connected?</b>"}}
+    RESP["<b>Configure ReSpeaker</b><br/><small>DSP · Tuning · udev</small>"]
+    SKIP["<b>Skip</b>"]
+    PIPE["<b>Setup Audio Pipeline</b><br/><small>Log-MMSE · SoX · Loopback</small>"]
+    SRVS["<b>Create Systemd Services</b><br/><small>respeaker-tune<br/>respeaker-loopback</small>"]
+    DOCKER["<b>Start BirdNET-Go Docker</b><br/><small>docker-compose up -d</small>"]
+    OPT["<b>System Optimization</b><br/><small>Permissions · USB · Timezone</small>"]
+    RELOG{{"<b>Re-login Required</b>"}}
+    VERIFY["<b>Verification</b><br/><small>docker ps<br/>systemctl status</small>"]
+    WORKS{{"<b>Working?</b>"}}
+    SUCCESS(["<b>COMPLETE</b><br/><small>http://IP:8080</small>"])
+    TROUBLE["<b>Troubleshooting</b><br/><small>Check Logs · Diagnostics</small>"]
     
     START ==> CLONE
     CLONE ==> CHOICE
-    CHOICE ==>|"<small>RPI</small>"| RPI
+    CHOICE ==>|"<small>RPi</small>"| RPI
     CHOICE ==>|"<small>Nano</small>"| NANO
     RPI ==> SETUP
     NANO ==> SETUP
     SETUP ==> DEPS
     DEPS ==> CHECK
-    CHECK ==>|"<small>ДА</small>"| RESP
-    CHECK ==>|"<small>НЕТ</small>"| SKIP
+    CHECK ==>|"<small>YES</small>"| RESP
+    CHECK ==>|"<small>NO</small>"| SKIP
     RESP ==> PIPE
     SKIP ==> PIPE
     PIPE ==> SRVS
@@ -203,8 +203,8 @@ flowchart TD
     OPT ==> RELOG
     RELOG ==> VERIFY
     VERIFY ==> WORKS
-    WORKS ==>|"<small>ДА</small>"| SUCCESS
-    WORKS ==>|"<small>НЕТ</small>"| TROUBLE
+    WORKS ==>|"<small>YES</small>"| SUCCESS
+    WORKS ==>|"<small>NO</small>"| TROUBLE
     TROUBLE ==> VERIFY
     
     classDef start fill:#667EEA,stroke:#5A67D8,stroke-width:4px,color:#fff,rx:15,ry:15
@@ -228,35 +228,35 @@ flowchart TD
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'13px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 graph TB
-    subgraph EXT["<b>🌐 ВНЕШНИЕ СЕРВИСЫ</b>"]
-        BW["<b>🌍 BirdWeather</b><br/><small>Публичная<br/>станция</small>"]
-        MQTT["<b>📡 MQTT</b><br/><small>Home<br/>Assistant</small>"]
-        NTP["<b>🕐 NTP</b><br/><small>Время</small>"]
+    subgraph EXT["<b>ВНЕШНИЕ СЕРВИСЫ</b>"]
+        BW["<b>BirdWeather</b><br/><small>Публичная<br/>станция</small>"]
+        MQTT["<b>MQTT Broker</b><br/><small>Home<br/>Assistant</small>"]
+        NTP["<b>NTP Server</b><br/><small>Time Sync</small>"]
     end
     
-    subgraph HOST["<b>💻 ХОСТ-СИСТЕМА</b>"]
-        subgraph SRV["<b>🔄 Systemd</b>"]
-            S1["<b>🔧 respeaker-tune</b><br/><small>DSP config</small>"]
-            S2["<b>🔊 respeaker-loopback</b><br/><small>Audio pipeline</small>"]
-            S3["<b>💚 healthcheck</b><br/><small>Monitoring</small>"]
+    subgraph HOST["<b>ХОСТ-СИСТЕМА</b>"]
+        subgraph SRV["<b>Systemd Services</b>"]
+            S1["<b>respeaker-tune</b><br/><small>DSP config</small>"]
+            S2["<b>respeaker-loopback</b><br/><small>Audio pipeline</small>"]
+            S3["<b>healthcheck</b><br/><small>Monitoring</small>"]
         end
         
-        subgraph ALSA["<b>🔊 ALSA Layer</b>"]
+        subgraph ALSA["<b>ALSA Layer</b>"]
             AL1["<b>hw:ArrayUAC10,0</b><br/><small>ReSpeaker Input</small>"]
             AL2["<b>hw:2,0,0</b><br/><small>Loop Output</small>"]
             AL3["<b>hw:2,1,0</b><br/><small>Loop Input</small>"]
         end
         
-        subgraph DCK["<b>🐳 Docker</b>"]
-            BN["<b>🧠 BirdNET-Go</b><br/><small>Container<br/>network: host</small>"]
-            WT["<b>🔄 Watchtower</b><br/><small>Auto-update</small>"]
+        subgraph DCK["<b>Docker Engine</b>"]
+            BN["<b>BirdNET-Go</b><br/><small>Container<br/>network: host</small>"]
+            WT["<b>Watchtower</b><br/><small>Auto-update</small>"]
         end
     end
     
-    subgraph STORE["<b>💾 ХРАНИЛИЩЕ</b>"]
-        DB[("<b>🗄️ SQLite DB</b><br/><small>Детекции</small>")]
-        CLIPS["<b>🎵 Clips</b><br/><small>.wav files</small>"]
-        SPEC["<b>📊 Spectrograms</b><br/><small>.png files</small>"]
+    subgraph STORE["<b>ХРАНИЛИЩЕ</b>"]
+        DB[("<b>SQLite Database</b><br/><small>Детекции</small>")]
+        CLIPS["<b>Audio Clips</b><br/><small>.wav files</small>"]
+        SPEC["<b>Spectrograms</b><br/><small>.png files</small>"]
     end
     
     S1 -->|"<small>USB ctl</small>"| AL1

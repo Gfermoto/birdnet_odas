@@ -58,14 +58,14 @@ sudo bash setup.sh
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'16px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 graph LR
-    A["<b>🎤 ReSpeaker USB</b><br/><small>16 kHz · 6 channels</small>"]
-    B["<b>🔇 Log-MMSE</b><br/><small>Шумоподавление</small>"]
-    C["<b>⚙️ SoX</b><br/><small>48 kHz · +8dB</small>"]
-    D["<b>🔄 ALSA Loop</b><br/><small>Virtual Device</small>"]
-    E["<b>🧠 BirdNET-Go</b><br/><small>Нейросеть</small>"]
-    F["<b>🌐 Web UI</b>"]
-    G["<b>📡 MQTT</b>"]
-    H["<b>🔌 API</b>"]
+    A["<b>ReSpeaker USB</b><br/><small>16 kHz · 6 channels</small>"]
+    B["<b>Log-MMSE</b><br/><small>Шумоподавление</small>"]
+    C["<b>SoX</b><br/><small>48 kHz · +8dB</small>"]
+    D["<b>ALSA Loop</b><br/><small>Virtual Device</small>"]
+    E["<b>BirdNET-Go</b><br/><small>Нейросеть</small>"]
+    F["<b>Web UI</b>"]
+    G["<b>MQTT</b>"]
+    H["<b>API</b>"]
     
     A -->|"<small>arecord</small>"| B
     B -->|"<small>python3</small>"| C
