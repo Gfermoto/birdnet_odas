@@ -72,13 +72,13 @@ ReSpeaker → Log-MMSE → SoX → Loopback → BirdNET-Go
 
 ```
 birdnet_odas/
-├── platforms/
-│   ├── common/              # Универсальные скрипты
-│   ├── raspberry-pi/        # Raspberry Pi setup
-│   └── nanopi-m4b/          # NanoPi M4B setup
-├── scripts/                 # Утилиты
-├── docs/                    # Документация
-└── docker-compose.yml
+  platforms/
+    common/              # Универсальные скрипты
+    raspberry-pi/        # Raspberry Pi setup
+    nanopi-m4b/          # NanoPi M4B setup
+  scripts/               # Утилиты
+  docs/                  # Документация
+  docker-compose.yml
 ```
 
 ## Утилиты (scripts/)
