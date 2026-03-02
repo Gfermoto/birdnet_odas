@@ -42,8 +42,8 @@ BirdNET-ODAS - это система автоматического распоз
 ### 1. Клонирование репозитория
 
 ```bash
-git clone https://github.com/yourusername/birdnet-odas.git
-cd birdnet-odas
+git clone https://github.com/Gfermoto/birdnet_odas.git
+cd birdnet_odas
 ```
 
 ### 2. Выбор платформы и запуск установки
@@ -175,7 +175,7 @@ MIT License - см. [LICENSE](LICENSE)
 
 ## 📧 Контакты
 
-Вопросы и предложения: [Issues](https://github.com/yourusername/birdnet-odas/issues)
+Вопросы и предложения: [Issues](https://github.com/Gfermoto/birdnet_odas/issues)
 
 ---
 
