@@ -124,12 +124,21 @@ while true; do
     
     log_info "Запуск аудио пайплайна"
     
-    # Запустить пайплайн с логированием ошибок
-    if arecord -D hw:ArrayUAC10,0 -f S16_LE -r 16000 -c 6 -t raw --buffer-size=8192 --period-size=2048 2>>"$ERROR_LOG" | \
+    # Восстановление USB autosuspend при каждом запуске
+    for dev in /sys/bus/usb/devices/*; do
+        if [ -f $dev/idVendor ] && grep -q 2886 $dev/idVendor 2>/dev/null; then
+            echo -1 | tee $dev/power/autosuspend >/dev/null 2>&1 || true
+            echo on | tee $dev/power/control >/dev/null 2>&1 || true
+            break
+        fi
+    done
+    
+    # Запустить пайплайн с логированием ошибок (оптимальные настройки)
+    if arecord -D hw:ArrayUAC10,0 -f S16_LE -r 16000 -c 6 -t raw --buffer-size=32768 --period-size=8192 2>>"$ERROR_LOG" | \
        python3 /usr/local/bin/log_mmse_processor.py 2>>"$ERROR_LOG" | \
        sox -t raw -r 16000 -c 1 -e signed-integer -b 16 -L - \
-           -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - gain -2.0 2>>"$ERROR_LOG" | \
-       aplay -D hw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw --buffer-size=8192 --period-size=2048 2>>"$ERROR_LOG"; then
+           -t raw -r 48000 -c 1 -e signed-integer -b 16 -L - gain 8.0 2>>"$ERROR_LOG" | \
+       aplay -D hw:2,1,0 -f S16_LE -r 48000 -c 1 -t raw --buffer-size=32768 --period-size=8192 2>>"$ERROR_LOG"; then
         
         # Успешный запуск - сбросить счетчик ошибок
         ERROR_COUNT=0
@@ -150,6 +159,16 @@ while true; do
         update_stats restart  # Увеличить счетчик рестартов только при ошибке
         
         log_error "Ошибка пайплайна (код: $EXIT_CODE, счетчик: $ERROR_COUNT/$MAX_ERRORS)"
+        
+        # Восстановление USB autosuspend при ошибке
+        sleep 2
+        for dev in /sys/bus/usb/devices/*; do
+            if [ -f $dev/idVendor ] && grep -q 2886 $dev/idVendor 2>/dev/null; then
+                echo -1 | tee $dev/power/autosuspend >/dev/null 2>&1 || true
+                echo on | tee $dev/power/control >/dev/null 2>&1 || true
+                break
+            fi
+        done
         
         # Экспоненциальная задержка: 1s, 2s, 4s, 8s, 16s, max 30s
         DELAY=$((2 ** (ERROR_COUNT - 1)))

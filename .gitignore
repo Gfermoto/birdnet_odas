@@ -1,46 +1,10 @@
-# Секреты и конфигурация
-*.env
-*.key
-*.pem
-*.secret
-*.token
-.env.local
-.env.*.local
-config/secrets.yaml
-config/secrets.yml
-
-# Логи и временные файлы
+# Logs and temporary files
 *.log
 *.tmp
-*.temp
-logs/
-tmp/
-temp/
-/temp/
-
-# Данные BirdNET-Go
-birdnet-results/
-data/
-*.wav
-*.mp3
-*.flac
-*.csv
-*.json
-!package.json
-!package-lock.json
-
-# Системные файлы
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
+*.bak
+*.old
 *~
-.vscode/
-.idea/
-
-# Windows Zone.Identifier (файлы безопасности Windows)
-*:Zone.Identifier
-*.Zone.Identifier
+.DS_Store
 
 # Python
 __pycache__/
@@ -50,31 +14,37 @@ __pycache__/
 .Python
 venv/
 env/
-ENV/
 .venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+
+# Project specific
+pipeline_stats.json
+errors.log
+*.wav
+*.pcm
 
 # Docker
 docker-compose.override.yml
 
-# Backup файлы
-*.bak
-*.backup
-*.tar.gz
-*.zip
+# System
+.Trash-*
+Thumbs.db
 
-# Тестовые файлы
-test_*.wav
-test_*.mp3
-field_test.wav
-spectrogram.png
+# Temporary reports and restore scripts
+*_REPORT.md
+*_STATUS.md
+*_FIX.md
+*_AUDIT.md
+restore_*.sh
+restore_files/
+.cleanup_plan.txt
 
-# Установочные скрипты (если содержат чувствительные данные)
-# install.sh - оставляем, так как это публичный скрипт
-
-# Локальные настройки
-local_settings.py
-local_config.json
-
-# Текстовая версия статьи (не для Git)
-article.txt
-
+# Environment
+.env
+!env.example

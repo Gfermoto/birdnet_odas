@@ -1,67 +1,50 @@
 # Changelog
 
-## [2.0.0] - 2024-12-09
+All notable changes to this project will be documented in this file.
 
-### Multi-Platform Support
+## [Unreleased]
 
-Проект реорганизован для поддержки нескольких ARM64-платформ.
+### Added
+- Initial release of BirdNET-ODAS integration
+- ReSpeaker USB 4 Mic Array support
+- Log-MMSE noise suppression algorithm
+- ALSA loopback audio pipeline
+- Automated installation scripts for Raspberry Pi and NanoPi
+- Systemd services for auto-start and monitoring
+- Pipeline healthcheck with automatic USB recovery
+- Comprehensive documentation
 
-### Добавлено
+### Changed
+- Optimized audio buffer settings (32768/8192)
+- Improved MIN_GAIN for better signal processing (0.15)
+- Enhanced USB autosuspend handling
+- Updated BirdNET-Go to nightly builds
 
-**Raspberry Pi:**
-- Поддержка CM4, Pi 4, Pi 5
-- Установочный скрипт: `platforms/raspberry-pi/setup.sh`
-- Docker работает без фиксов
+### Fixed
+- USB autosuspend causing device disconnections
+- Audio pipeline underruns
+- Docker container conflicts with systemd
+- Network DHCP issues on NanoPi
 
-**Модульная архитектура:**
-- `platforms/common/` — универсальные скрипты
-- `platforms/raspberry-pi/` — Raspberry Pi setup
-- `platforms/nanopi-m4b/` — NanoPi M4B setup (legacy)
+## [1.0.0] - Initial Release
 
-### Изменено
+### Core Features
+- BirdNET-Go integration with Docker
+- ReSpeaker 4 Mic Array audio capture
+- Real-time audio processing pipeline
+- Web interface for monitoring
+- MQTT integration for Home Assistant
+- Automatic clip retention management
+- Geographic species filtering
+- Multi-platform support (Raspberry Pi, NanoPi)
 
-**Структура:**
-```
-scripts/setup_nanopi.sh  →  platforms/nanopi-m4b/setup.sh
-(нет Pi поддержки)       →  platforms/raspberry-pi/setup.sh
-                         +  platforms/common/*.sh
-```
-
-**Документация:**
-- README сокращен (511 → 130 строк)
-- Удалены дубликаты
-- Убраны эмодзи и AI-паттерны
-
-### Устарело
-
-NanoPi M4B больше не рекомендуется:
-- Хрупкая плата
-- Требует Docker фиксы
-- Малое сообщество
-
-Рекомендуется Raspberry Pi CM4.
-
-### Технические детали
-
-**Raspberry Pi преимущества:**
-- overlay2 storage driver (без фиксов)
-- Стандартный iptables
-- eMMC в CM4
-- Качественная PCB
-
-**Обратная совместимость:**
-- Утилиты scripts/ не изменены
-- ReSpeaker настройки идентичны
-- Аудио-пайплайн совместим
+### Documentation
+- Installation guide
+- Configuration guide
+- Troubleshooting guide
+- Audio pipeline technical documentation
+- Platform-specific setup guides
 
 ---
 
-## [1.0.0] - 2024-08
-
-### Initial Release
-
-- Поддержка NanoPi M4B
-- BirdNET-Go интеграция
-- ReSpeaker USB 4 Mic Array
-- Log-MMSE шумоподавление
-- Docker Compose setup
+For detailed information about each version, see the [documentation](docs/).

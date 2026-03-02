@@ -27,7 +27,7 @@ FRAME_SIZE = 1024              # Размер FFT frame (оптимально д
 HOP_SIZE = 512                 # Шаг между frames (50% overlap для плавного восстановления)
 ALPHA = 0.70                   # Decision-Directed smoothing (баланс шум/артефакты)
 NOISE_FRAMES = 15              # Количество frames для оценки шума
-MIN_GAIN = 0.01                # Spectral floor (-40 dB), агрессивное подавление шума
+MIN_GAIN = 0.15                # Spectral floor (-16.5 dB), оптимальное подавление шума
 NOISE_ESTIMATE_ADAPT_ALPHA = 0.995  # Скорость адаптации шумовой модели (~10 сек, медленная)
 
 Использование:
