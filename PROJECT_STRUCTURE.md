@@ -2,55 +2,55 @@
 
 ```
 birdnet_odas/
-├── README.md                   # Main documentation
-├── CHANGELOG.md               # Version history
-├── article.md                 # Detailed article about the project
-├── .gitignore                 # Git ignore rules
-├── docker-compose.yml         # Docker configuration
-├── env.example                # Environment variables template
-│
-├── docs/                      # Documentation
-│   ├── README.md
-│   ├── audio_pipeline.md      # Audio pipeline technical docs
-│   ├── birdnet_go_setup.md    # BirdNET-Go configuration
-│   ├── docker_compose_guide.md
-│   ├── respeaker_usb4mic_setup.md  # ReSpeaker setup
-│   ├── troubleshooting.md     # Problem solving guide
-│   └── usb_isolator_power.md
-│
-├── scripts/                   # Utility scripts
-│   ├── README.md
-│   ├── check_audio_devices.sh        # Audio device diagnostics
-│   ├── check_gain.sh                 # Gain monitoring
-│   ├── collect_metrics.sh            # Performance metrics
-│   ├── diagnose_clicks.sh            # Audio artifacts detection
-│   ├── disable_led_ring.py           # LED control
-│   ├── fix_birdnet_device.sh         # Device configuration fix
-│   ├── fix_network_dhcp.sh           # DHCP troubleshooting
-│   ├── install_metrics_service.sh    # Metrics service setup
-│   ├── log_mmse_processor.py         # **Noise suppression (core)**
-│   ├── optimize_performance.sh       # System optimizations
-│   ├── respeaker-tune.sh             # **ReSpeaker DSP config (core)**
-│   └── respeaker_loopback.sh         # **Audio pipeline (core)**
-│
-├── platforms/                 # Platform-specific setup
-│   ├── raspberry-pi/
-│   │   ├── README.md
-│   │   ├── setup.sh                  # Automated installation
-│   │   └── config.env
-│   ├── nanopi-m4b/
-│   │   ├── README.md
-│   │   ├── setup.sh
-│   │   └── config.env
-│   └── common/
-│       ├── setup_respeaker.sh        # ReSpeaker configuration
-│       └── setup_audio_pipeline.sh   # Pipeline installation
-│
-├── images/                    # Documentation images
-│   └── README.md
-│
-└── wav/                       # Test audio files
-    └── (sample files)
+   README.md                   # Main documentation
+   CHANGELOG.md               # Version history
+   article.md                 # Detailed article about the project
+   .gitignore                 # Git ignore rules
+   docker-compose.yml         # Docker configuration
+   env.example                # Environment variables template
+  
+   docs/                      # Documentation
+        README.md
+        audio_pipeline.md      # Audio pipeline technical docs
+        birdnet_go_setup.md    # BirdNET-Go configuration
+        docker_compose_guide.md
+        respeaker_usb4mic_setup.md  # ReSpeaker setup
+        troubleshooting.md     # Problem solving guide
+        usb_isolator_power.md
+  
+   scripts/                   # Utility scripts
+        README.md
+        check_audio_devices.sh        # Audio device diagnostics
+        check_gain.sh                 # Gain monitoring
+        collect_metrics.sh            # Performance metrics
+        diagnose_clicks.sh            # Audio artifacts detection
+        disable_led_ring.py           # LED control
+        fix_birdnet_device.sh         # Device configuration fix
+        fix_network_dhcp.sh           # DHCP troubleshooting
+        install_metrics_service.sh    # Metrics service setup
+        log_mmse_processor.py         # **Noise suppression (core)**
+        optimize_performance.sh       # System optimizations
+        respeaker-tune.sh             # **ReSpeaker DSP config (core)**
+        respeaker_loopback.sh         # **Audio pipeline (core)**
+  
+   platforms/                 # Platform-specific setup
+        raspberry-pi/
+             README.md
+             setup.sh                  # Automated installation
+             config.env
+        nanopi-m4b/
+             README.md
+             setup.sh
+             config.env
+        common/
+            setup_respeaker.sh        # ReSpeaker configuration
+            setup_audio_pipeline.sh   # Pipeline installation
+  
+   images/                    # Documentation images
+        README.md
+  
+   wav/                       # Test audio files
+       (sample files)
 
 ## Core Components
 
@@ -80,35 +80,35 @@ birdnet_odas/
 ### System Files
 ```
 /usr/local/bin/
-├── respeaker_loopback.sh
-├── log_mmse_processor.py
-└── respeaker-tune.sh
+  respeaker_loopback.sh
+  log_mmse_processor.py
+  respeaker-tune.sh
 
 /etc/systemd/system/
-├── respeaker-loopback.service
-├── respeaker-tune.service
-├── pipeline-healthcheck.service
-└── pipeline-healthcheck.timer
+  respeaker-loopback.service
+  respeaker-tune.service
+  pipeline-healthcheck.service
+  pipeline-healthcheck.timer
 
 /etc/udev/rules.d/
-└── 99-respeaker.rules
+  99-respeaker.rules
 
 /etc/modules-load.d/
-└── snd-aloop.conf
+  snd-aloop.conf
 
 /var/log/birdnet-pipeline/
-├── errors.log
-└── pipeline_stats.json
+  errors.log
+  pipeline_stats.json
 ```
 
 ### Docker Volumes
 ```
 /var/lib/docker/volumes/
-└── birdnet-go-data/
-    └── _data/
-        ├── config.yaml
-        ├── birdnet.db
-        └── clips/
+  birdnet-go-data/
+    _data/
+      config.yaml
+      birdnet.db
+      clips/
 ```
 
 ## Documentation Map
