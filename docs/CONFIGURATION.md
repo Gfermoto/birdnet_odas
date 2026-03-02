@@ -435,3 +435,17 @@ docker cp ~/birdnet_backup.db birdnet-go:/data/birdnet_restored.db
 - [ReSpeaker](respeaker_usb4mic_setup.md)
 - [Аудио пайплайн](audio_pipeline.md)
 - [BirdNET-Go документация](birdnet_go_setup.md)
+
+---
+
+## 📖 Навигация
+
+- [Главная](../README.md)
+- [Руководство по установке](INSTALLATION.md)
+- [Руководство по настройке](CONFIGURATION.md)
+- [Решение проблем](troubleshooting.md)
+- [Настройка ReSpeaker](respeaker_usb4mic_setup.md)
+- [Аудио пайплайн](audio_pipeline.md)
+- [Настройка BirdNET-Go](birdnet_go_setup.md)
+- [Структура проекта](../PROJECT_STRUCTURE.md)
+- [Contributing](../CONTRIBUTING.md)

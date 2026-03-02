@@ -74,29 +74,26 @@ sudo bash setup.sh
 http://<IP-адрес-устройства>:8080
 ```
 
-## 📖 Документация
-
-- [Установка и настройка](docs/INSTALLATION.md)
-- [Конфигурация](docs/CONFIGURATION.md)
-- [Решение проблем](docs/troubleshooting.md)
-- [Настройка ReSpeaker](docs/respeaker_usb4mic_setup.md)
-- [Аудио пайплайн](docs/audio_pipeline.md)
-- [BirdNET-Go](docs/birdnet_go_setup.md)
-
 ## 🏗️ Архитектура
 
-```
-ReSpeaker USB (16kHz, 6ch)
-    ↓ arecord
-Log-MMSE Processor (шумоподавление)
-    ↓ python3
-SoX (ресемплинг 48kHz + gain)
-    ↓ sox
-ALSA Loopback (48kHz, 1ch)
-    ↓ hw:2,0,0
-BirdNET-Go (распознавание)
-    ↓
-Веб-интерфейс / MQTT / API
+```mermaid
+graph LR
+    A[ReSpeaker USB<br/>16kHz, 6ch] -->|arecord| B[Log-MMSE<br/>Шумоподавление]
+    B -->|python3| C[SoX<br/>Resample 48kHz]
+    C -->|gain +8dB| D[ALSA Loopback<br/>48kHz, 1ch]
+    D -->|hw:2,0,0| E[BirdNET-Go<br/>Распознавание]
+    E --> F[Веб-интерфейс]
+    E --> G[MQTT]
+    E --> H[API]
+    
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style C fill:#ffe1f5
+    style D fill:#e1ffe1
+    style E fill:#f5e1ff
+    style F fill:#ffe1e1
+    style G fill:#ffe1e1
+    style H fill:#ffe1e1
 ```
 
 ## 🔧 Основные компоненты
@@ -155,6 +152,15 @@ docker compose restart
 - **Задержка обработки:** <500ms
 - **Точность распознавания:** 85-95% (зависит от условий)
 
+## 📖 Документация
+
+- [Руководство по установке](docs/INSTALLATION.md)
+- [Руководство по настройке](docs/CONFIGURATION.md)
+- [Решение проблем](docs/troubleshooting.md)
+- [Настройка ReSpeaker](docs/respeaker_usb4mic_setup.md)
+- [Аудио пайплайн](docs/audio_pipeline.md)
+- [Настройка BirdNET-Go](docs/birdnet_go_setup.md)
+
 ## 🤝 Вклад в проект
 
 Приветствуются:
@@ -162,6 +168,8 @@ docker compose restart
 - Предложения улучшений
 - Pull requests
 - Документация
+
+Подробнее: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## 📝 Лицензия
 
