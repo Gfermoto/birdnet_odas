@@ -1,5 +1,7 @@
 # Разработка алгоритмов шумоподавления для распознавания речи в сложных акустических условиях
 
+<cut />
+
 ## Введение
 
 Распознавание речи в реальных условиях представляет собой одну из наиболее сложных задач в области обработки сигналов. Особенно актуальна эта проблема для антропоморфных роботов, которые должны функционировать в разнообразных зашумленных условиях: в толпе людей, на открытом воздухе при сильном ветре, в помещениях с высоким уровнем фонового шума. Традиционные алгоритмы шумоподавления, разработанные для стационарных условий, оказываются неэффективными в таких сценариях.
@@ -95,52 +97,8 @@ Docker используется для контейнеризации основ
 
 ### Общая архитектура системы
 
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'15px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
-graph TB
-    subgraph HW["<b>АППАРАТНЫЙ СЛОЙ</b>"]
-        A["<b>ReSpeaker USB 4 Mic Array</b><br/><small>4× MEMS микрофона<br/>USB Audio Class 1.0<br/>Beamforming · AGC · DSP</small>"]
-        B["<b>Одноплатный компьютер</b><br/><small>Raspberry Pi 4/5 · NanoPi M4B<br/>ARM64 · 4GB RAM · Docker</small>"]
-    end
-    
-    subgraph SW["<b>ПРОГРАММНЫЙ СЛОЙ</b>"]
-        C["<b>ALSA + DSP</b><br/><small>HPF 180Hz · AGC<br/>Noise Reduction</small>"]
-        D["<b>Log-MMSE Processor</b><br/><small>Python 3.8+<br/>MIN_GAIN: 0.15<br/>STFT 1024</small>"]
-        E["<b>SoX Resample</b><br/><small>16→48 kHz<br/>Gain +8dB<br/>HQ Algorithm</small>"]
-        F["<b>ALSA Loopback</b><br/><small>Virtual Audio Device<br/>snd-aloop module</small>"]
-        G["<b>BirdNET-Go</b><br/><small>Docker Container<br/>Neural Network<br/>6K+ Species</small>"]
-    end
-    
-    subgraph OUT["<b>ВЫХОДНОЙ СЛОЙ</b>"]
-        H["<b>Веб-интерфейс</b><br/><small>:8080 · Dashboard</small>"]
-        I["<b>MQTT</b><br/><small>Home Assistant</small>"]
-        J["<b>BirdWeather</b><br/><small>Публичная станция</small>"]
-        K["<b>SQLite DB</b><br/><small>История детекций</small>"]
-    end
-    
-    A -->|"<small>USB Audio</small>"| B
-    B -->|"<small>arecord 16kHz 6ch</small>"| C
-    C -->|"<small>pipe</small>"| D
-    D -->|"<small>16kHz mono</small>"| E
-    E -->|"<small>48kHz mono</small>"| F
-    F -->|"<small>hw:2,0,0</small>"| G
-    G -.->|"<small>HTTP</small>"| H
-    G -.->|"<small>publish</small>"| I
-    G -.->|"<small>upload</small>"| J
-    G -.->|"<small>write</small>"| K
-    
-    classDef hardware fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff,rx:10,ry:10
-    classDef dsp fill:#4ECDC4,stroke:#2A9D8F,stroke-width:3px,color:#000,rx:10,ry:10
-    classDef core fill:#FFE66D,stroke:#F4A261,stroke-width:4px,color:#000,rx:10,ry:10
-    classDef ai fill:#95E1D3,stroke:#38A169,stroke-width:4px,color:#000,rx:10,ry:10
-    classDef output fill:#A8DADC,stroke:#457B9D,stroke-width:2px,color:#000,rx:10,ry:10
-    
-    class A,B hardware
-    class C,E,F dsp
-    class D core
-    class G ai
-    class H,I,J,K output
-```
+![Общая архитектура системы](images/diagrams/system_architecture.png)
+*Рис. 4: Архитектура системы BirdNET-ODAS*
 
 ### BirdNET-Go как тестовая платформа
 
@@ -161,62 +119,8 @@ BirdNET-Go предоставляет веб-интерфейс для наст�
 
 Полный путь обработки звука от микрофона до BirdNET-Go состоит из нескольких этапов:
 
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
-flowchart LR
-    subgraph IN["<b>INPUT</b>"]
-        direction TB
-        A["<b>ReSpeaker USB</b><br/><small>16 kHz<br/>6 channels<br/>interleaved</small>"]
-    end
-    
-    subgraph PROC["<b>PROCESSING PIPELINE</b>"]
-        direction TB
-        B["<b>Stage 1: arecord</b><br/><small>Audio Capture<br/>buffer: 32768</small>"]
-        C["<b>Stage 2: Log-MMSE</b><br/><small>Noise Reduction<br/>STFT 1024<br/>MIN_GAIN: 0.15</small>"]
-        D["<b>Stage 3: SoX</b><br/><small>Resample 48kHz<br/>Gain: +8dB<br/>Quality: VHQ</small>"]
-        E["<b>Stage 4: aplay</b><br/><small>Loopback Write<br/>hw:2,1,0</small>"]
-    end
-    
-    subgraph LOOP["<b>VIRTUAL</b>"]
-        direction TB
-        F["<b>ALSA Loopback</b><br/><small>snd-aloop<br/>48 kHz · mono</small>"]
-    end
-    
-    subgraph AI["<b>RECOGNITION</b>"]
-        direction TB
-        G["<b>BirdNET-Go</b><br/><small>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s</small>"]
-    end
-    
-    subgraph OUTDATA["<b>OUTPUT</b>"]
-        direction TB
-        H["<b>Детекции</b><br/><small>+ clips<br/>+ spectrograms</small>"]
-    end
-    
-    A ==>|"<small>pipe</small>"| B
-    B ==>|"<small>stdout</small>"| C
-    C ==>|"<small>stdout</small>"| D
-    D ==>|"<small>stdout</small>"| E
-    E ==>|"<small>write</small>"| F
-    F ==>|"<small>hw:2,0,0</small>"| G
-    G ==>|"<small>save</small>"| H
-    
-    classDef input fill:#667EEA,stroke:#5A67D8,stroke-width:3px,color:#fff,rx:12,ry:12
-    classDef capture fill:#48BB78,stroke:#38A169,stroke-width:3px,color:#fff,rx:12,ry:12
-    classDef core fill:#F6AD55,stroke:#DD6B20,stroke-width:4px,color:#000,rx:12,ry:12
-    classDef convert fill:#FC8181,stroke:#E53E3E,stroke-width:3px,color:#fff,rx:12,ry:12
-    classDef virtual fill:#4FD1C5,stroke:#319795,stroke-width:3px,color:#000,rx:12,ry:12
-    classDef ai fill:#9F7AEA,stroke:#805AD5,stroke-width:4px,color:#fff,rx:12,ry:12
-    classDef output fill:#68D391,stroke:#48BB78,stroke-width:3px,color:#000,rx:12,ry:12
-    
-    class A input
-    class B capture
-    class C core
-    class D convert
-    class E capture
-    class F virtual
-    class G ai
-    class H output
-```
+![Аудио пайплайн](images/diagrams/audio_pipeline.png)
+*Рис. 5: Детальный аудио пайплайн обработки сигнала*
 
 1. **Запись с ReSpeaker** — получение 6-канального потока на частоте дискретизации 16 кГц (нативная частота устройства)
 2. **Log-MMSE шумоподавление** — обработка сигнала алгоритмом Log-MMSE для подавления нестационарного шума (критически важный этап)
