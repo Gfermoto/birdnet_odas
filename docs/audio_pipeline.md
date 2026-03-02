@@ -13,27 +13,27 @@
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 flowchart LR
-    subgraph IN["<b>📥 INPUT</b>"]
+    subgraph IN["<b>INPUT</b>"]
         direction TB
-        A["<b>🎤 ReSpeaker USB</b><br/><small>16 kHz<br/>6 channels<br/>interleaved</small>"]
+        A["<b>ReSpeaker USB</b><br/><small>16 kHz<br/>6 channels<br/>interleaved</small>"]
     end
     
-    subgraph PROC["<b>⚙️ PROCESSING PIPELINE</b>"]
+    subgraph PROC["<b>PROCESSING PIPELINE</b>"]
         direction TB
-        B["<b>1️⃣ arecord</b><br/><small>Audio Capture<br/>buffer: 32768</small>"]
-        C["<b>2️⃣ Log-MMSE</b><br/><small>Noise Reduction<br/>STFT 1024<br/>MIN_GAIN: 0.15</small>"]
-        D["<b>3️⃣ SoX</b><br/><small>Resample 48kHz<br/>Gain: +8dB<br/>Quality: VHQ</small>"]
-        E["<b>4️⃣ aplay</b><br/><small>Loopback Write<br/>hw:2,1,0</small>"]
+        B["<b>Stage 1: arecord</b><br/><small>Audio Capture<br/>buffer: 32768</small>"]
+        C["<b>Stage 2: Log-MMSE</b><br/><small>Noise Reduction<br/>STFT 1024<br/>MIN_GAIN: 0.15</small>"]
+        D["<b>Stage 3: SoX</b><br/><small>Resample 48kHz<br/>Gain: +8dB<br/>Quality: VHQ</small>"]
+        E["<b>Stage 4: aplay</b><br/><small>Loopback Write<br/>hw:2,1,0</small>"]
     end
     
-    subgraph LOOP["<b>🔄 VIRTUAL</b>"]
+    subgraph LOOP["<b>VIRTUAL</b>"]
         direction TB
-        F["<b>🔁 ALSA Loopback</b><br/><small>snd-aloop<br/>48 kHz · mono</small>"]
+        F["<b>ALSA Loopback</b><br/><small>snd-aloop<br/>48 kHz · mono</small>"]
     end
     
-    subgraph AI["<b>🧠 RECOGNITION</b>"]
+    subgraph AI["<b>RECOGNITION</b>"]
         direction TB
-        G["<b>🤖 BirdNET-Go</b><br/><small>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s</small>"]
+        G["<b>BirdNET-Go</b><br/><small>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s</small>"]
     end
     
     A ==>|"<small>pipe</small>"| B
