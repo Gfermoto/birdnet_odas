@@ -1,28 +1,26 @@
 #!/bin/bash
-# Скрипт для передачи ReSpeaker через Log-MMSE и SoX в ALSA loopback
-# С логированием и статистикой для анализа производительности
+# Передача звука с ReSpeaker через Log-MMSE в ALSA loopback
+# Все процессы связаны пайпами, если один падает - падают все
 
 LOG_DIR="/var/log/birdnet-pipeline"
 STATS_FILE="$LOG_DIR/pipeline_stats.json"
 ERROR_LOG="$LOG_DIR/errors.log"
 
-# Создать директорию для логов
 mkdir -p "$LOG_DIR"
 
-# Функция логирования ошибок
+# Пишем ошибки в лог и syslog
 log_error() {
     local msg="$1"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $msg" >> "$ERROR_LOG"
     logger -t respeaker-loopback -p err "$msg" 2>/dev/null || true
 }
 
-# Функция логирования информации
 log_info() {
     local msg="$1"
     logger -t respeaker-loopback -p info "$msg" 2>/dev/null || true
 }
 
-# Функция обновления статистики (простая реализация без jq)
+# Статистика в JSON (без jq, парсим руками)
 update_stats() {
     local event=$1
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')

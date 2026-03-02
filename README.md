@@ -1,80 +1,59 @@
-# BirdNET-ODAS: Система распознавания птиц с направленным слухом
+# BirdNET-ODAS
 
-**Интеграция BirdNET с ReSpeaker USB 4 Mic Array для точного распознавания птиц**
+Система автоматического распознавания птиц на базе BirdNET-Go с микрофонной решеткой ReSpeaker USB 4 Mic Array и Log-MMSE шумоподавлением.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🎯 О проекте
+## Что это
 
-BirdNET-ODAS - это система автоматического распознавания птиц по звуку, объединяющая:
-- **BirdNET-Go** - нейросетевая модель для идентификации птиц
-- **ReSpeaker 4 Mic Array** - микрофонная решетка для качественного захвата звука
-- **Log-MMSE шумоподавление** - алгоритм для фильтрации фонового шума
-- **ALSA Loopback** - аудио пайплайн для обработки в реальном времени
+Интеграция BirdNET нейросети для распознавания птиц с профессиональным микрофонным массивом ReSpeaker и алгоритмом шумоподавления Log-MMSE. Позволяет надежно распознавать птиц в полевых условиях с высоким уровнем фонового шума.
 
-### Возможности
+**Основные возможности:**
+- Распознавание 6000+ видов птиц (модель BirdNET GLOBAL 6K V2.4)
+- Шумоподавление в реальном времени (Log-MMSE)
+- Веб-интерфейс для мониторинга
+- Автосохранение аудиоклипов с детекциями
+- MQTT интеграция для Home Assistant
+- Географическая фильтрация видов
+- Круглосуточная работа с автовосстановлением
 
-- ✅ **Распознавание 6000+ видов птиц** из модели BirdNET GLOBAL 6K V2.4
-- ✅ **Шумоподавление в реальном времени** с помощью Log-MMSE
-- ✅ **Веб-интерфейс** для мониторинга и анализа
-- ✅ **Автоматическое сохранение** аудиоклипов с детекциями
-- ✅ **MQTT интеграция** для Home Assistant
-- ✅ **Географическая фильтрация** видов по региону
-- ✅ **Круглосуточная работа** с автовосстановлением
+## Требования
 
-## 📋 Требования
-
-### Оборудование
+**Железо:**
 - Raspberry Pi 4/5 (4GB+ RAM) или NanoPi M4B
 - [ReSpeaker USB Mic Array v2.0](https://www.seeedstudio.com/ReSpeaker-Mic-Array-v2-0.html)
-- MicroSD карта 16GB+ (рекомендуется 32GB+)
-- Стабильное питание 5V/3A
+- MicroSD 16GB+ (лучше 32GB)
+- Питание 5V/3A
 
-### Программное обеспечение
+**Софт:**
 - Linux (Debian/Ubuntu)
-- Docker и Docker Compose
-- ALSA утилиты
+- Docker + Docker Compose
+- ALSA
 - Python 3.8+
-- SoX аудио процессор
+- SoX
 
-## 🚀 Быстрый старт
-
-### 1. Клонирование репозитория
+## Быстрый старт
 
 ```bash
 git clone https://github.com/Gfermoto/birdnet_odas.git
 cd birdnet_odas
 ```
 
-### 2. Выбор платформы и запуск установки
-
-**Для Raspberry Pi:**
+**Raspberry Pi:**
 ```bash
 cd platforms/raspberry-pi
 sudo bash setup.sh
 ```
 
-**Для NanoPi M4B:**
+**NanoPi M4B:**
 ```bash
 cd platforms/nanopi-m4b  
 sudo bash setup.sh
 ```
 
-Скрипт автоматически:
-- Установит Docker и зависимости
-- Настроит ReSpeaker
-- Создаст аудио пайплайн
-- Запустит BirdNET-Go
-- Настроит автозапуск всех сервисов
+Скрипт сам установит Docker, настроит ReSpeaker, создаст аудио пайплайн и запустит BirdNET-Go. После установки веб-интерфейс доступен на `http://<IP>:8080`.
 
-### 3. Доступ к веб-интерфейсу
-
-После установки откройте в браузере:
-```
-http://<IP-адрес-устройства>:8080
-```
-
-## 🏗️ Архитектура
+## Архитектура
 
 ```mermaid
 graph LR
@@ -96,63 +75,44 @@ graph LR
     style H fill:#ffe1e1
 ```
 
-## 🔧 Основные компоненты
+**Ключевые параметры:**
+- Buffer: 32768 samples (для стабильности)
+- Gain: +8.0 dB
+- MIN_GAIN: 0.15 (оптимально для птиц)
+- Threshold: 0.65 (баланс точность/чувствительность)
+- Retention: 30 дней, автоочистка при 80% диска
 
-### Аудио пайплайн
-- **Buffer size:** 32768 samples (стабильность)
-- **Gain:** 8.0 dB (усиление сигнала)
-- **MIN_GAIN:** 0.15 (оптимальное шумоподавление)
-- **Частота:** 16kHz → 48kHz ресемплинг
+## Обслуживание
 
-### BirdNET-Go
-- **Модель:** BirdNET GLOBAL 6K V2.4
-- **Threshold:** 0.65 (баланс точность/чувствительность)
-- **Overlap:** 1.5 секунд
-- **Retention:** 30 дней, автоочистка при 80% диска
-
-## 🛠️ Обслуживание
-
-### Проверка статуса
+Проверка статуса:
 ```bash
-# Аудио пайплайн
 systemctl status respeaker-loopback.service
-
-# Docker контейнер
 docker ps
-
-# Процессы пайплайна (должно быть 4)
-ps aux | grep -E "arecord|log_mmse|sox|aplay" | grep -v grep
+ps aux | grep -E "arecord|log_mmse|sox|aplay" | grep -v grep  # должно быть 4 процесса
 ```
 
-### Просмотр логов
+Логи:
 ```bash
-# Systemd сервис
 journalctl -fu respeaker-loopback.service
-
-# Docker контейнер
 docker logs -f birdnet-go
-
-# Ошибки пайплайна
 tail -f /var/log/birdnet-pipeline/errors.log
 ```
 
-### Перезапуск
+Перезапуск:
 ```bash
-# Аудио пайплайн
 sudo systemctl restart respeaker-loopback.service
-
-# BirdNET-Go
 docker compose restart
 ```
 
-## 📊 Производительность
+## Производительность
 
-- **CPU:** 20-30% (Raspberry Pi 4)
-- **RAM:** 400-600 MB
-- **Задержка обработки:** <500ms
-- **Точность распознавания:** 85-95% (зависит от условий)
+На Raspberry Pi 4:
+- CPU: 20-30%
+- RAM: 400-600 MB
+- Latency: <500ms
+- Accuracy: 85-95% (зависит от условий)
 
-## 📖 Документация
+## Документация
 
 - [Руководство по установке](docs/INSTALLATION.md)
 - [Руководство по настройке](docs/CONFIGURATION.md)
@@ -161,30 +121,22 @@ docker compose restart
 - [Аудио пайплайн](docs/audio_pipeline.md)
 - [Настройка BirdNET-Go](docs/birdnet_go_setup.md)
 
-## 🤝 Вклад в проект
+Детальная статья о проекте: [article.md](article.md)
 
-Приветствуются:
-- Отчеты об ошибках
-- Предложения улучшений
-- Pull requests
-- Документация
+## Вклад
 
-Подробнее: [CONTRIBUTING.md](CONTRIBUTING.md)
+Pull requests приветствуются. Для крупных изменений сначала откройте issue. См. [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## 📝 Лицензия
+## Лицензия
 
-MIT License - см. [LICENSE](LICENSE)
+MIT - см. [LICENSE](LICENSE)
 
-## 🙏 Благодарности
+## Благодарности
 
-- [BirdNET-Go](https://github.com/tphakala/birdnet-go) - система распознавания птиц
-- [Seeed Studio](https://www.seeedstudio.com/) - ReSpeaker микрофонная решетка
-- Ephraim & Malah - алгоритм Log-MMSE
+- [BirdNET-Go](https://github.com/tphakala/birdnet-go) - tphakala
+- [Seeed Studio](https://www.seeedstudio.com/) - ReSpeaker
+- Ephraim & Malah - Log-MMSE algorithm
 
-## 📧 Контакты
+## Issues
 
-Вопросы и предложения: [Issues](https://github.com/Gfermoto/birdnet_odas/issues)
-
----
-
-**Статья о проекте:** [article.md](article.md)
+[GitHub Issues](https://github.com/Gfermoto/birdnet_odas/issues)
