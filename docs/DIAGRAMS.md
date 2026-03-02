@@ -1,203 +1,301 @@
-# Диаграммы для статьи
+# Диаграммы проекта
 
-## Архитектура системы (общая)
+Профессиональные диаграммы для визуализации архитектуры и процессов системы BirdNET-ODAS.
+
+---
+
+## 1. Архитектура системы (общая)
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'15px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 graph TB
-    subgraph Hardware["🔧 Аппаратная часть"]
-        A[ReSpeaker USB 4 Mic Array<br/>4 микрофона, USB Audio Class 1.0]
-        B[Одноплатный компьютер<br/>Raspberry Pi 4/5 или NanoPi M4B<br/>4GB RAM, Docker]
+    subgraph HW["<b>⚡ АППАРАТНЫЙ СЛОЙ</b>"]
+        A["<b>🎤 ReSpeaker USB 4 Mic Array</b><br/><small>4× MEMS микрофона<br/>USB Audio Class 1.0<br/>Beamforming · AGC · DSP</small>"]
+        B["<b>🖥️ Одноплатный компьютер</b><br/><small>Raspberry Pi 4/5 · NanoPi M4B<br/>ARM64 · 4GB RAM · Docker</small>"]
     end
     
-    subgraph Software["💻 Программная часть"]
-        C[ALSA + DSP настройки<br/>HPF 180Hz, AGC, Шумоподавление]
-        D[Log-MMSE Processor<br/>Python, MIN_GAIN=0.15]
-        E[SoX Resample<br/>16kHz → 48kHz, gain +8dB]
-        F[ALSA Loopback<br/>Виртуальное аудиоустройство]
-        G[BirdNET-Go<br/>Docker, Neural Network]
+    subgraph SW["<b>🔧 ПРОГРАММНЫЙ СЛОЙ</b>"]
+        C["<b>📊 ALSA + DSP</b><br/><small>HPF 180Hz · AGC<br/>Noise Reduction</small>"]
+        D["<b>🔬 Log-MMSE Processor</b><br/><small>Python 3.8+<br/>MIN_GAIN: 0.15<br/>STFT 1024</small>"]
+        E["<b>⚙️ SoX Resample</b><br/><small>16→48 kHz<br/>Gain +8dB<br/>HQ Algorithm</small>"]
+        F["<b>🔄 ALSA Loopback</b><br/><small>Virtual Audio Device<br/>snd-aloop module</small>"]
+        G["<b>🧠 BirdNET-Go</b><br/><small>Docker Container<br/>Neural Network<br/>6K+ Species</small>"]
     end
     
-    subgraph Output["📊 Выходные данные"]
-        H[Веб-интерфейс<br/>:8080]
-        I[MQTT<br/>Home Assistant]
-        J[BirdWeather<br/>Публичная станция]
-        K[SQLite DB<br/>История детекций]
+    subgraph OUT["<b>📤 ВЫХОДНОЙ СЛОЙ</b>"]
+        H["<b>🌐 Веб-интерфейс</b><br/><small>:8080 · Dashboard</small>"]
+        I["<b>📡 MQTT</b><br/><small>Home Assistant</small>"]
+        J["<b>🌍 BirdWeather</b><br/><small>Публичная станция</small>"]
+        K["<b>💾 SQLite DB</b><br/><small>История детекций</small>"]
     end
     
-    A -->|USB Audio| B
-    B -->|arecord 16kHz 6ch| C
-    C -->|pipe| D
-    D -->|16kHz 1ch| E
-    E -->|48kHz 1ch| F
-    F -->|hw:2,0,0| G
-    G --> H
-    G --> I
-    G --> J
-    G --> K
+    A -->|"<small>USB Audio</small>"| B
+    B -->|"<small>arecord 16kHz 6ch</small>"| C
+    C -->|"<small>pipe</small>"| D
+    D -->|"<small>16kHz mono</small>"| E
+    E -->|"<small>48kHz mono</small>"| F
+    F -->|"<small>hw:2,0,0</small>"| G
+    G -.->|"<small>HTTP</small>"| H
+    G -.->|"<small>publish</small>"| I
+    G -.->|"<small>upload</small>"| J
+    G -.->|"<small>write</small>"| K
     
-    style A fill:#e1f5ff,stroke:#333,stroke-width:2px
-    style B fill:#ffe1f5,stroke:#333,stroke-width:2px
-    style D fill:#fff4e1,stroke:#333,stroke-width:3px
-    style G fill:#f5e1ff,stroke:#333,stroke-width:3px
-    style H fill:#e1ffe1,stroke:#333,stroke-width:2px
+    classDef hardware fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff,rx:10,ry:10
+    classDef dsp fill:#4ECDC4,stroke:#2A9D8F,stroke-width:3px,color:#000,rx:10,ry:10
+    classDef core fill:#FFE66D,stroke:#F4A261,stroke-width:4px,color:#000,rx:10,ry:10
+    classDef ai fill:#95E1D3,stroke:#38A169,stroke-width:4px,color:#000,rx:10,ry:10
+    classDef output fill:#A8DADC,stroke:#457B9D,stroke-width:2px,color:#000,rx:10,ry:10
+    
+    class A,B hardware
+    class C,E,F dsp
+    class D core
+    class G ai
+    class H,I,J,K output
 ```
 
-## Аудио пайплайн (детальный)
+---
+
+## 2. Аудио пайплайн (детальный)
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 flowchart LR
-    subgraph Input["📥 Вход"]
-        A[ReSpeaker USB<br/>16 kHz<br/>6 каналов<br/>interleaved]
+    subgraph IN["<b>📥 INPUT</b>"]
+        direction TB
+        A["<b>🎤 ReSpeaker USB</b><br/><small>16 kHz<br/>6 channels<br/>interleaved</small>"]
     end
     
-    subgraph Processing["⚙️ Обработка"]
-        B[arecord<br/>Захват аудио<br/>buffer: 32768]
-        C[Log-MMSE<br/>Шумоподавление<br/>STFT 1024<br/>MIN_GAIN: 0.15]
-        D[SoX<br/>Resample 48kHz<br/>Gain: +8dB<br/>Quality: very high]
-        E[aplay<br/>Loopback write<br/>hw:2,1,0]
+    subgraph PROC["<b>⚙️ PROCESSING PIPELINE</b>"]
+        direction TB
+        B["<b>1️⃣ arecord</b><br/><small>Audio Capture<br/>buffer: 32768</small>"]
+        C["<b>2️⃣ Log-MMSE</b><br/><small>Noise Reduction<br/>STFT 1024<br/>MIN_GAIN: 0.15</small>"]
+        D["<b>3️⃣ SoX</b><br/><small>Resample 48kHz<br/>Gain: +8dB<br/>Quality: VHQ</small>"]
+        E["<b>4️⃣ aplay</b><br/><small>Loopback Write<br/>hw:2,1,0</small>"]
     end
     
-    subgraph Loopback["🔄 Loopback"]
-        F[ALSA Loopback<br/>snd-aloop<br/>48 kHz<br/>mono]
+    subgraph LOOP["<b>🔄 VIRTUAL</b>"]
+        direction TB
+        F["<b>🔁 ALSA Loopback</b><br/><small>snd-aloop<br/>48 kHz · mono</small>"]
     end
     
-    subgraph Recognition["🧠 Распознавание"]
-        G[BirdNET-Go<br/>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s]
+    subgraph AI["<b>🧠 RECOGNITION</b>"]
+        direction TB
+        G["<b>🤖 BirdNET-Go</b><br/><small>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s</small>"]
     end
     
-    subgraph Output["📤 Выход"]
-        H[Детекции<br/>+ аудиоклипы<br/>+ спектрограммы]
+    subgraph OUTDATA["<b>📤 OUTPUT</b>"]
+        direction TB
+        H["<b>📊 Детекции</b><br/><small>+ clips<br/>+ spectrograms</small>"]
     end
     
-    A -->|pipe| B
-    B -->|stdout| C
-    C -->|stdout| D
-    D -->|stdout| E
-    E -->|write| F
-    F -->|hw:2,0,0| G
-    G --> H
+    A ==>|"<small>pipe</small>"| B
+    B ==>|"<small>stdout</small>"| C
+    C ==>|"<small>stdout</small>"| D
+    D ==>|"<small>stdout</small>"| E
+    E ==>|"<small>write</small>"| F
+    F ==>|"<small>hw:2,0,0</small>"| G
+    G ==>|"<small>save</small>"| H
     
-    style A fill:#e1f5ff,stroke:#333,stroke-width:2px
-    style C fill:#fff4e1,stroke:#333,stroke-width:3px
-    style D fill:#ffe1e1,stroke:#333,stroke-width:2px
-    style F fill:#e1ffe1,stroke:#333,stroke-width:2px
-    style G fill:#f5e1ff,stroke:#333,stroke-width:3px
-    style H fill:#e1f5e1,stroke:#333,stroke-width:2px
+    classDef input fill:#667EEA,stroke:#5A67D8,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef capture fill:#48BB78,stroke:#38A169,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef core fill:#F6AD55,stroke:#DD6B20,stroke-width:4px,color:#000,rx:12,ry:12
+    classDef convert fill:#FC8181,stroke:#E53E3E,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef virtual fill:#4FD1C5,stroke:#319795,stroke-width:3px,color:#000,rx:12,ry:12
+    classDef ai fill:#9F7AEA,stroke:#805AD5,stroke-width:4px,color:#fff,rx:12,ry:12
+    classDef output fill:#68D391,stroke:#48BB78,stroke-width:3px,color:#000,rx:12,ry:12
+    
+    class A input
+    class B capture
+    class C core
+    class D convert
+    class E capture
+    class F virtual
+    class G ai
+    class H output
 ```
 
-## Log-MMSE алгоритм (упрощенно)
+---
+
+## 3. Log-MMSE алгоритм
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 flowchart TD
-    A[Входной аудиосигнал<br/>16 kHz, mono] --> B[STFT<br/>Окно Ханна<br/>Frame: 1024<br/>Hop: 512]
-    B --> C{Обучение?<br/>Первые 15 кадров}
-    C -->|Да| D[Оценка PSD шума<br/>λ&#40;ω&#41; = mean&#40;|Y&#40;ω,t&#41;|²&#41;]
-    C -->|Нет| E[Вычисление SNR<br/>γ = |Y|² / λ<br/>ξ = α×G²×γ + &#40;1-α&#41;×max&#40;γ-1, 0&#41;]
-    D --> E
-    E --> F[Log-MMSE Gain<br/>G = &#40;ξ/&#40;1+ξ&#41;&#41; × exp&#40;0.5×E₁&#40;ν&#41;&#41;]
-    F --> G[Применение усиления<br/>Ŷ = G × Y]
-    G --> H[Soft Limiter<br/>tanh&#40;x × 0.95&#41;]
-    H --> I[ISTFT<br/>Overlap-add<br/>Нормализация]
-    I --> J[Выходной сигнал<br/>16 kHz, mono]
+    START["<b>▶️ Входной аудиосигнал</b><br/><small>16 kHz · mono</small>"]
+    STFT["<b>📊 STFT</b><br/><small>Hann Window<br/>Frame: 1024<br/>Hop: 512</small>"]
+    CHECK{{"<b>⚡ Обучение?</b><br/><small>Первые 15 кадров</small>"}}
+    NOISE["<b>🔍 Оценка шума</b><br/><small>λ(ω) = mean(|Y(ω,t)|²)</small>"]
+    SNR["<b>📈 SNR расчет</b><br/><small>γ = |Y|² / λ<br/>ξ = α×G²×γ + (1-α)×max(γ-1,0)</small>"]
+    GAIN["<b>🎯 Log-MMSE Gain</b><br/><small>G = (ξ/(1+ξ)) × exp(0.5×E₁(ν))</small>"]
+    APPLY["<b>✨ Применение</b><br/><small>Ŷ = G × Y</small>"]
+    LIMIT["<b>🛡️ Soft Limiter</b><br/><small>tanh(x × 0.95)</small>"]
+    ISTFT["<b>🔄 ISTFT</b><br/><small>Overlap-add<br/>Нормализация</small>"]
+    END["<b>✅ Выходной сигнал</b><br/><small>16 kHz · mono</small>"]
     
-    style A fill:#e1f5ff,stroke:#333,stroke-width:2px
-    style B fill:#ffe1f5,stroke:#333,stroke-width:2px
-    style F fill:#fff4e1,stroke:#333,stroke-width:3px
-    style H fill:#ffe1e1,stroke:#333,stroke-width:2px
-    style J fill:#e1ffe1,stroke:#333,stroke-width:2px
+    START ==> STFT
+    STFT ==> CHECK
+    CHECK ==>|"<small>ДА</small>"| NOISE
+    CHECK ==>|"<small>НЕТ</small>"| SNR
+    NOISE ==> SNR
+    SNR ==> GAIN
+    GAIN ==> APPLY
+    APPLY ==> LIMIT
+    LIMIT ==> ISTFT
+    ISTFT ==> END
+    
+    classDef start fill:#667EEA,stroke:#5A67D8,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef process fill:#48BB78,stroke:#38A169,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef decision fill:#F6AD55,stroke:#DD6B20,stroke-width:3px,color:#000,rx:12,ry:12
+    classDef core fill:#FC8181,stroke:#E53E3E,stroke-width:4px,color:#fff,rx:12,ry:12
+    classDef protect fill:#9F7AEA,stroke:#805AD5,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef end fill:#68D391,stroke:#48BB78,stroke-width:3px,color:#000,rx:12,ry:12
+    
+    class START start
+    class STFT,NOISE,SNR,APPLY,ISTFT process
+    class CHECK decision
+    class GAIN core
+    class LIMIT protect
+    class END end
 ```
 
-## Процесс установки
+---
+
+## 4. Процесс установки
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'13px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 flowchart TD
-    Start[Начало] --> A[Клонирование<br/>git clone]
-    A --> B{Выбор<br/>платформы}
-    B -->|Raspberry Pi| C1[cd platforms/raspberry-pi]
-    B -->|NanoPi M4B| C2[cd platforms/nanopi-m4b]
-    C1 --> D[sudo bash setup.sh]
-    C2 --> D
+    START(["<b>🚀 НАЧАЛО</b>"])
+    CLONE["<b>📦 Клонирование</b><br/><small>git clone repo</small>"]
+    CHOICE{{"<b>🖥️ Платформа?</b>"}}
+    RPI["<b>🍓 Raspberry Pi</b><br/><small>cd platforms/raspberry-pi</small>"]
+    NANO["<b>🔷 NanoPi M4B</b><br/><small>cd platforms/nanopi-m4b</small>"]
+    SETUP["<b>⚙️ Запуск setup.sh</b><br/><small>sudo bash setup.sh</small>"]
+    DEPS["<b>📥 Установка зависимостей</b><br/><small>Docker · Python · SoX · ALSA</small>"]
+    CHECK{{"<b>🎤 ReSpeaker?</b>"}}
+    RESP["<b>🔧 Настройка ReSpeaker</b><br/><small>DSP · Tuning · udev</small>"]
+    SKIP["<b>⏭️ Пропуск</b>"]
+    PIPE["<b>🔊 Аудио пайплайн</b><br/><small>Log-MMSE · SoX · Loopback</small>"]
+    SRVS["<b>🔄 Systemd сервисы</b><br/><small>respeaker-tune<br/>respeaker-loopback</small>"]
+    DOCKER["<b>🐳 BirdNET-Go Docker</b><br/><small>docker-compose up -d</small>"]
+    OPT["<b>🎯 Оптимизация</b><br/><small>Permissions · USB · Timezone</small>"]
+    RELOG{{"<b>🔄 Перелогин</b>"}}
+    VERIFY["<b>✅ Проверка</b><br/><small>docker ps<br/>systemctl status</small>"]
+    WORKS{{"<b>💚 Работает?</b>"}}
+    SUCCESS(["<b>🎉 ГОТОВО!</b><br/><small>http://IP:8080</small>"])
+    TROUBLE["<b>⚠️ Troubleshooting</b><br/><small>Логи · Диагностика</small>"]
     
-    D --> E[Установка Docker<br/>+ зависимостей]
-    E --> F{ReSpeaker<br/>подключен?}
-    F -->|Да| G[Настройка<br/>ReSpeaker]
-    F -->|Нет| H[Пропуск]
-    G --> I[Создание<br/>аудио пайплайна]
-    H --> I
+    START ==> CLONE
+    CLONE ==> CHOICE
+    CHOICE ==>|"<small>RPI</small>"| RPI
+    CHOICE ==>|"<small>Nano</small>"| NANO
+    RPI ==> SETUP
+    NANO ==> SETUP
+    SETUP ==> DEPS
+    DEPS ==> CHECK
+    CHECK ==>|"<small>ДА</small>"| RESP
+    CHECK ==>|"<small>НЕТ</small>"| SKIP
+    RESP ==> PIPE
+    SKIP ==> PIPE
+    PIPE ==> SRVS
+    SRVS ==> DOCKER
+    DOCKER ==> OPT
+    OPT ==> RELOG
+    RELOG ==> VERIFY
+    VERIFY ==> WORKS
+    WORKS ==>|"<small>ДА</small>"| SUCCESS
+    WORKS ==>|"<small>НЕТ</small>"| TROUBLE
+    TROUBLE ==> VERIFY
     
-    I --> J[Настройка<br/>systemd сервисов]
-    J --> K[Запуск<br/>BirdNET-Go<br/>Docker]
-    K --> L[Оптимизация<br/>системы]
-    L --> M{Перелогин}
-    M --> N[Проверка<br/>docker ps]
-    N --> O{Работает?}
-    O -->|Да| P[✅ Готово!<br/>http://IP:8080]
-    O -->|Нет| Q[Troubleshooting]
-    Q --> N
+    classDef start fill:#667EEA,stroke:#5A67D8,stroke-width:4px,color:#fff,rx:15,ry:15
+    classDef action fill:#48BB78,stroke:#38A169,stroke-width:3px,color:#fff,rx:10,ry:10
+    classDef decision fill:#F6AD55,stroke:#DD6B20,stroke-width:3px,color:#000,rx:10,ry:10
+    classDef important fill:#FC8181,stroke:#E53E3E,stroke-width:3px,color:#fff,rx:10,ry:10
+    classDef success fill:#68D391,stroke:#48BB78,stroke-width:4px,color:#000,rx:15,ry:15
+    classDef trouble fill:#FBD38D,stroke:#D69E2E,stroke-width:3px,color:#000,rx:10,ry:10
     
-    style Start fill:#e1f5ff,stroke:#333,stroke-width:2px
-    style D fill:#fff4e1,stroke:#333,stroke-width:2px
-    style G fill:#ffe1f5,stroke:#333,stroke-width:2px
-    style K fill:#f5e1ff,stroke:#333,stroke-width:2px
-    style P fill:#e1ffe1,stroke:#333,stroke-width:3px
-    style Q fill:#ffe1e1,stroke:#333,stroke-width:2px
+    class START,SUCCESS start
+    class CLONE,DEPS,PIPE,SRVS,OPT,VERIFY action
+    class CHOICE,CHECK,RELOG,WORKS decision
+    class RPI,NANO,RESP,SETUP,DOCKER important
+    class SKIP,TROUBLE trouble
 ```
 
-## Архитектура микросервисов
+---
+
+## 5. Архитектура микросервисов
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'13px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 graph TB
-    subgraph External["🌐 Внешние сервисы"]
-        BW[BirdWeather<br/>Публичная станция]
-        MQTT[MQTT Broker<br/>Home Assistant]
-        NTP[NTP Server<br/>Синхронизация времени]
+    subgraph EXT["<b>🌐 ВНЕШНИЕ СЕРВИСЫ</b>"]
+        BW["<b>🌍 BirdWeather</b><br/><small>Публичная<br/>станция</small>"]
+        MQTT["<b>📡 MQTT</b><br/><small>Home<br/>Assistant</small>"]
+        NTP["<b>🕐 NTP</b><br/><small>Время</small>"]
     end
     
-    subgraph Host["💻 Хост-система"]
-        subgraph Services["⚙️ Systemd Services"]
-            S1[respeaker-tune<br/>DSP настройки]
-            S2[respeaker-loopback<br/>Аудио пайплайн]
-            S3[healthcheck.timer<br/>Мониторинг]
+    subgraph HOST["<b>💻 ХОСТ-СИСТЕМА</b>"]
+        subgraph SRV["<b>🔄 Systemd</b>"]
+            S1["<b>🔧 respeaker-tune</b><br/><small>DSP config</small>"]
+            S2["<b>🔊 respeaker-loopback</b><br/><small>Audio pipeline</small>"]
+            S3["<b>💚 healthcheck</b><br/><small>Monitoring</small>"]
         end
         
-        subgraph ALSA["🔊 ALSA"]
-            AL1[hw:ArrayUAC10,0<br/>ReSpeaker input]
-            AL2[hw:2,0,0<br/>Loopback output]
-            AL3[hw:2,1,0<br/>Loopback input]
+        subgraph ALSA["<b>🔊 ALSA Layer</b>"]
+            AL1["<b>hw:ArrayUAC10,0</b><br/><small>ReSpeaker Input</small>"]
+            AL2["<b>hw:2,0,0</b><br/><small>Loop Output</small>"]
+            AL3["<b>hw:2,1,0</b><br/><small>Loop Input</small>"]
         end
         
-        subgraph Docker["🐳 Docker"]
-            BN[BirdNET-Go<br/>container<br/>network: host]
-            WT[Watchtower<br/>Auto-update]
+        subgraph DCK["<b>🐳 Docker</b>"]
+            BN["<b>🧠 BirdNET-Go</b><br/><small>Container<br/>network: host</small>"]
+            WT["<b>🔄 Watchtower</b><br/><small>Auto-update</small>"]
         end
     end
     
-    subgraph Storage["💾 Хранилище"]
-        DB[(SQLite DB<br/>Детекции)]
-        CLIPS[Аудиоклипы<br/>.wav files]
-        SPEC[Спектрограммы<br/>.png files]
+    subgraph STORE["<b>💾 ХРАНИЛИЩЕ</b>"]
+        DB[("<b>🗄️ SQLite DB</b><br/><small>Детекции</small>")]
+        CLIPS["<b>🎵 Clips</b><br/><small>.wav files</small>"]
+        SPEC["<b>📊 Spectrograms</b><br/><small>.png files</small>"]
     end
     
-    S1 -->|USB control| AL1
-    AL1 -->|arecord| S2
-    S2 -->|aplay| AL3
-    AL2 -.->|read| BN
-    BN --> DB
-    BN --> CLIPS
-    BN --> SPEC
-    BN -->|upload| BW
-    BN -->|publish| MQTT
-    S3 -.->|monitor| S2
-    WT -.->|watch| BN
-    NTP -.->|sync| Host
+    S1 -->|"<small>USB ctl</small>"| AL1
+    AL1 -->|"<small>arecord</small>"| S2
+    S2 -->|"<small>aplay</small>"| AL3
+    AL2 -.->|"<small>read</small>"| BN
+    BN ==> DB
+    BN ==> CLIPS
+    BN ==> SPEC
+    BN ==>|"<small>upload</small>"| BW
+    BN ==>|"<small>publish</small>"| MQTT
+    S3 -.->|"<small>check</small>"| S2
+    WT -.->|"<small>watch</small>"| BN
+    NTP -.->|"<small>sync</small>"| HOST
     
-    style S2 fill:#fff4e1,stroke:#333,stroke-width:3px
-    style BN fill:#f5e1ff,stroke:#333,stroke-width:3px
-    style DB fill:#e1ffe1,stroke:#333,stroke-width:2px
+    classDef external fill:#667EEA,stroke:#5A67D8,stroke-width:3px,color:#fff,rx:10,ry:10
+    classDef service fill:#48BB78,stroke:#38A169,stroke-width:3px,color:#fff,rx:10,ry:10
+    classDef alsa fill:#F6AD55,stroke:#DD6B20,stroke-width:2px,color:#000,rx:10,ry:10
+    classDef docker fill:#4FD1C5,stroke:#319795,stroke-width:3px,color:#000,rx:10,ry:10
+    classDef core fill:#FC8181,stroke:#E53E3E,stroke-width:4px,color:#fff,rx:10,ry:10
+    classDef storage fill:#A8DADC,stroke:#457B9D,stroke-width:2px,color:#000,rx:10,ry:10
+    
+    class BW,MQTT,NTP external
+    class S1,S3 service
+    class S2 core
+    class AL1,AL2,AL3 alsa
+    class BN core
+    class WT docker
+    class DB,CLIPS,SPEC storage
 ```
 
-Эти диаграммы можно использовать в:
-- README.md (общая архитектура)
-- article.md (все диаграммы)
-- docs/audio_pipeline.md (детальный пайплайн)
-- docs/INSTALLATION.md (процесс установки)
+---
+
+## Использование
+
+Эти диаграммы используются в следующих документах:
+
+- **README.md** - упрощенная архитектура (диаграмма из README)
+- **article.md** - общая архитектура и детальный пайплайн (диаграммы 1 и 2)
+- **docs/audio_pipeline.md** - детальный пайплайн и Log-MMSE (диаграммы 2 и 3)
+- **docs/INSTALLATION.md** - процесс установки (диаграмма 4)
+- **docs/CONFIGURATION.md** - архитектура микросервисов (диаграмма 5)

@@ -11,38 +11,52 @@
 ### Полный pipeline
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 flowchart LR
-    subgraph Input["📥 Вход"]
-        A[ReSpeaker USB<br/>16 kHz<br/>6 каналов<br/>interleaved]
+    subgraph IN["<b>📥 INPUT</b>"]
+        direction TB
+        A["<b>🎤 ReSpeaker USB</b><br/><small>16 kHz<br/>6 channels<br/>interleaved</small>"]
     end
     
-    subgraph Processing["⚙️ Обработка"]
-        B[arecord<br/>Захват аудио<br/>buffer: 32768]
-        C[Log-MMSE<br/>Шумоподавление<br/>STFT 1024<br/>MIN_GAIN: 0.15]
-        D[SoX<br/>Resample 48kHz<br/>Gain: +8dB<br/>Quality: very high]
-        E[aplay<br/>Loopback write<br/>hw:2,1,0]
+    subgraph PROC["<b>⚙️ PROCESSING PIPELINE</b>"]
+        direction TB
+        B["<b>1️⃣ arecord</b><br/><small>Audio Capture<br/>buffer: 32768</small>"]
+        C["<b>2️⃣ Log-MMSE</b><br/><small>Noise Reduction<br/>STFT 1024<br/>MIN_GAIN: 0.15</small>"]
+        D["<b>3️⃣ SoX</b><br/><small>Resample 48kHz<br/>Gain: +8dB<br/>Quality: VHQ</small>"]
+        E["<b>4️⃣ aplay</b><br/><small>Loopback Write<br/>hw:2,1,0</small>"]
     end
     
-    subgraph Loopback["🔄 Loopback"]
-        F[ALSA Loopback<br/>snd-aloop<br/>48 kHz<br/>mono]
+    subgraph LOOP["<b>🔄 VIRTUAL</b>"]
+        direction TB
+        F["<b>🔁 ALSA Loopback</b><br/><small>snd-aloop<br/>48 kHz · mono</small>"]
     end
     
-    subgraph Recognition["🧠 Распознавание"]
-        G[BirdNET-Go<br/>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s]
+    subgraph AI["<b>🧠 RECOGNITION</b>"]
+        direction TB
+        G["<b>🤖 BirdNET-Go</b><br/><small>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s</small>"]
     end
     
-    A -->|pipe| B
-    B -->|stdout| C
-    C -->|stdout| D
-    D -->|stdout| E
-    E -->|write| F
-    F -->|hw:2,0,0| G
+    A ==>|"<small>pipe</small>"| B
+    B ==>|"<small>stdout</small>"| C
+    C ==>|"<small>stdout</small>"| D
+    D ==>|"<small>stdout</small>"| E
+    E ==>|"<small>write</small>"| F
+    F ==>|"<small>hw:2,0,0</small>"| G
     
-    style A fill:#e1f5ff,stroke:#333,stroke-width:2px
-    style C fill:#fff4e1,stroke:#333,stroke-width:3px
-    style D fill:#ffe1e1,stroke:#333,stroke-width:2px
-    style F fill:#e1ffe1,stroke:#333,stroke-width:2px
-    style G fill:#f5e1ff,stroke:#333,stroke-width:3px
+    classDef input fill:#667EEA,stroke:#5A67D8,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef capture fill:#48BB78,stroke:#38A169,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef core fill:#F6AD55,stroke:#DD6B20,stroke-width:4px,color:#000,rx:12,ry:12
+    classDef convert fill:#FC8181,stroke:#E53E3E,stroke-width:3px,color:#fff,rx:12,ry:12
+    classDef virtual fill:#4FD1C5,stroke:#319795,stroke-width:3px,color:#000,rx:12,ry:12
+    classDef ai fill:#9F7AEA,stroke:#805AD5,stroke-width:4px,color:#fff,rx:12,ry:12
+    
+    class A input
+    class B capture
+    class C core
+    class D convert
+    class E capture
+    class F virtual
+    class G ai
 ```
 
 ### Компоненты

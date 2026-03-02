@@ -56,23 +56,38 @@ sudo bash setup.sh
 ## Архитектура
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'16px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
 graph LR
-    A[ReSpeaker USB<br/>16kHz, 6ch] -->|arecord| B[Log-MMSE<br/>Шумоподавление]
-    B -->|python3| C[SoX<br/>Resample 48kHz]
-    C -->|gain +8dB| D[ALSA Loopback<br/>48kHz, 1ch]
-    D -->|hw:2,0,0| E[BirdNET-Go<br/>Распознавание]
-    E --> F[Веб-интерфейс]
-    E --> G[MQTT]
-    E --> H[API]
+    A["<b>🎤 ReSpeaker USB</b><br/><small>16 kHz · 6 channels</small>"]
+    B["<b>🔇 Log-MMSE</b><br/><small>Шумоподавление</small>"]
+    C["<b>⚙️ SoX</b><br/><small>48 kHz · +8dB</small>"]
+    D["<b>🔄 ALSA Loop</b><br/><small>Virtual Device</small>"]
+    E["<b>🧠 BirdNET-Go</b><br/><small>Нейросеть</small>"]
+    F["<b>🌐 Web UI</b>"]
+    G["<b>📡 MQTT</b>"]
+    H["<b>🔌 API</b>"]
     
-    style A fill:#e1f5ff
-    style B fill:#fff4e1
-    style C fill:#ffe1f5
-    style D fill:#e1ffe1
-    style E fill:#f5e1ff
-    style F fill:#ffe1e1
-    style G fill:#ffe1e1
-    style H fill:#ffe1e1
+    A -->|"<small>arecord</small>"| B
+    B -->|"<small>python3</small>"| C
+    C -->|"<small>resample</small>"| D
+    D -->|"<small>hw:2,0,0</small>"| E
+    E -.->|"<small>:8080</small>"| F
+    E -.->|"<small>publish</small>"| G
+    E -.->|"<small>REST</small>"| H
+    
+    classDef input fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff
+    classDef process fill:#F5A623,stroke:#C17D11,stroke-width:3px,color:#fff
+    classDef convert fill:#BD10E0,stroke:#8B0AA8,stroke-width:3px,color:#fff
+    classDef virtual fill:#50E3C2,stroke:#2BA88D,stroke-width:3px,color:#000
+    classDef ai fill:#7ED321,stroke:#5FA318,stroke-width:3px,color:#000
+    classDef output fill:#D0021B,stroke:#9B0114,stroke-width:2px,color:#fff
+    
+    class A input
+    class B process
+    class C convert
+    class D virtual
+    class E ai
+    class F,G,H output
 ```
 
 **Ключевые параметры:**
