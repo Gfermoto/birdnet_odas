@@ -10,18 +10,39 @@
 
 ### Полный pipeline
 
-```
-┌─────────────┐     ┌──────────────┐     ┌──────────┐     ┌─────────────┐     ┌──────────────┐
-│ ReSpeaker   │────▶│ Log-MMSE      │────▶│ SoX       │────▶│ ALSA        │────▶│ BirdNET-Go   │
-│ USB Mic     │     │ Processor     │     │ Resample  │     │ Loopback    │     │              │
-│             │     │               │     │           │     │             │     │              │
-│ 16kHz, 6ch  │     │ 16kHz, 1ch    │     │ 48kHz,1ch │     │ 48kHz, 1ch  │     │ 48kHz, 1ch   │
-│ interleaved │     │ mono          │     │ mono      │     │             │     │              │
-└─────────────┘     └──────────────┘     └──────────┘     └─────────────┘     └──────────────┘
-     │                    │                    │                  │                    │
-     │                    │                    │                  │                    │
-  arecord            python3              sox              aplay              docker
-                     log_mmse_processor   (resample)       (loopback)         birdnet-go
+```mermaid
+flowchart LR
+    subgraph Input["📥 Вход"]
+        A[ReSpeaker USB<br/>16 kHz<br/>6 каналов<br/>interleaved]
+    end
+    
+    subgraph Processing["⚙️ Обработка"]
+        B[arecord<br/>Захват аудио<br/>buffer: 32768]
+        C[Log-MMSE<br/>Шумоподавление<br/>STFT 1024<br/>MIN_GAIN: 0.15]
+        D[SoX<br/>Resample 48kHz<br/>Gain: +8dB<br/>Quality: very high]
+        E[aplay<br/>Loopback write<br/>hw:2,1,0]
+    end
+    
+    subgraph Loopback["🔄 Loopback"]
+        F[ALSA Loopback<br/>snd-aloop<br/>48 kHz<br/>mono]
+    end
+    
+    subgraph Recognition["🧠 Распознавание"]
+        G[BirdNET-Go<br/>Docker<br/>Threshold: 0.7<br/>Overlap: 1.5s]
+    end
+    
+    A -->|pipe| B
+    B -->|stdout| C
+    C -->|stdout| D
+    D -->|stdout| E
+    E -->|write| F
+    F -->|hw:2,0,0| G
+    
+    style A fill:#e1f5ff,stroke:#333,stroke-width:2px
+    style C fill:#fff4e1,stroke:#333,stroke-width:3px
+    style D fill:#ffe1e1,stroke:#333,stroke-width:2px
+    style F fill:#e1ffe1,stroke:#333,stroke-width:2px
+    style G fill:#f5e1ff,stroke:#333,stroke-width:3px
 ```
 
 ### Компоненты
