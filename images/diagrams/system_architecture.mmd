@@ -1,0 +1,44 @@
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'15px', 'fontFamily':'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'}}}%%
+graph TB
+    subgraph HW["<b>АППАРАТНЫЙ СЛОЙ</b>"]
+        A["<b>ReSpeaker USB 4 Mic Array</b><br/><small>4× MEMS микрофона<br/>USB Audio Class 1.0<br/>Beamforming · AGC · DSP</small>"]
+        B["<b>Одноплатный компьютер</b><br/><small>Raspberry Pi 4/5 · NanoPi M4B<br/>ARM64 · 4GB RAM · Docker</small>"]
+    end
+    
+    subgraph SW["<b>ПРОГРАММНЫЙ СЛОЙ</b>"]
+        C["<b>ALSA + DSP</b><br/><small>HPF 180Hz · AGC<br/>Noise Reduction</small>"]
+        D["<b>Log-MMSE Processor</b><br/><small>Python 3.8+<br/>MIN_GAIN: 0.15<br/>STFT 1024</small>"]
+        E["<b>SoX Resample</b><br/><small>16→48 kHz<br/>Gain +8dB<br/>HQ Algorithm</small>"]
+        F["<b>ALSA Loopback</b><br/><small>Virtual Audio Device<br/>snd-aloop module</small>"]
+        G["<b>BirdNET-Go</b><br/><small>Docker Container<br/>Neural Network<br/>6K+ Species</small>"]
+    end
+    
+    subgraph OUT["<b>ВЫХОДНОЙ СЛОЙ</b>"]
+        H["<b>Веб-интерфейс</b><br/><small>:8080 · Dashboard</small>"]
+        I["<b>MQTT</b><br/><small>Home Assistant</small>"]
+        J["<b>BirdWeather</b><br/><small>Публичная станция</small>"]
+        K["<b>SQLite DB</b><br/><small>История детекций</small>"]
+    end
+    
+    A -->|"<small>USB Audio</small>"| B
+    B -->|"<small>arecord 16kHz 6ch</small>"| C
+    C -->|"<small>pipe</small>"| D
+    D -->|"<small>16kHz mono</small>"| E
+    E -->|"<small>48kHz mono</small>"| F
+    F -->|"<small>hw:2,0,0</small>"| G
+    G -.->|"<small>HTTP</small>"| H
+    G -.->|"<small>publish</small>"| I
+    G -.->|"<small>upload</small>"| J
+    G -.->|"<small>write</small>"| K
+    
+    classDef hardware fill:#FF6B6B,stroke:#C92A2A,stroke-width:3px,color:#fff,rx:10,ry:10
+    classDef dsp fill:#4ECDC4,stroke:#2A9D8F,stroke-width:3px,color:#000,rx:10,ry:10
+    classDef core fill:#FFE66D,stroke:#F4A261,stroke-width:4px,color:#000,rx:10,ry:10
+    classDef ai fill:#95E1D3,stroke:#38A169,stroke-width:4px,color:#000,rx:10,ry:10
+    classDef output fill:#A8DADC,stroke:#457B9D,stroke-width:2px,color:#000,rx:10,ry:10
+    
+    class A,B hardware
+    class C,E,F dsp
+    class D core
+    class G ai
+    class H,I,J,K output
