@@ -136,6 +136,24 @@ bash scripts/install_metrics_service.sh
 
 Создает таймер для запуска каждые 5 минут.
 
+## Обслуживание диска
+
+### weekly_disk_cleanup.sh
+
+Еженедельная очистка только «реального мусора»: ротированные логи BirdNET-Go (в имени есть дата `YYYY-MM-DD` и файлу **старше 14 дней**), старые JSON метрик пайплайна (**90+ дней**), сжатие **journald** (оставить ~30 дней), `apt-get clean`, `docker image prune` (только висячие образы). **Клипы и текущие `access.log` / `application.log` не трогает.**
+
+```bash
+sudo cp scripts/weekly_disk_cleanup.sh /usr/local/bin/weekly_disk_cleanup.sh
+sudo chmod +x /usr/local/bin/weekly_disk_cleanup.sh
+sudo cp scripts/cron.d/birdnet-weekly-cleanup.example /etc/cron.d/birdnet-weekly-cleanup
+sudo chmod 644 /etc/cron.d/birdnet-weekly-cleanup
+```
+
+Проверка вручную: `sudo /usr/local/bin/weekly_disk_cleanup.sh`  
+Журнал прогона: `/var/log/birdnet-weekly-cleanup.log`
+
+По умолчанию cron: **воскресенье, 04:15** (см. `scripts/cron.d/birdnet-weekly-cleanup.example`).
+
 ## Оптимизация
 
 ### optimize_performance.sh

@@ -1,0 +1,12 @@
+# Пример для /etc/cron.d/birdnet-weekly-cleanup
+# Установка:
+#   sudo cp scripts/weekly_disk_cleanup.sh /usr/local/bin/weekly_disk_cleanup.sh
+#   sudo chmod +x /usr/local/bin/weekly_disk_cleanup.sh
+#   sudo cp scripts/cron.d/birdnet-weekly-cleanup.example /etc/cron.d/birdnet-weekly-cleanup
+#   sudo chmod 644 /etc/cron.d/birdnet-weekly-cleanup
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Каждое воскресенье в 04:15
+15 4 * * 0 root /usr/local/bin/weekly_disk_cleanup.sh
