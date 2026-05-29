@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Еженедельная безопасная очистка «реального мусора» на хосте BirdNET-ODAS.
-# Не трогает клипы, активные логи приложения и конфиги.
+# Еженедельная безопасная очистка на хосте BirdNET-ODAS.
+# По умолчанию не трогает клипы; при заполнении диска >85% удаляет самый старый месяц в clips/.
 #
 # Запуск: только от root (нужен доступ к volume Docker и journald).
 # Cron (раз в неделю, воскресенье 04:15):
@@ -45,6 +45,36 @@ if [[ -d "$BN_LOGS" ]]; then
   log "BirdNET rotated logs removed (count): $removed"
 else
   log "skip: $BN_LOGS not found"
+fi
+
+readonly BN_CLIPS="${BN_DATA}/clips"
+
+disk_use_pct() {
+  df / | awk 'NR==2 {gsub(/%/,"",$5); print $5}'
+}
+
+# 1b) Если диск >85%: обнулить крупные активные логи BirdNET (append-safe).
+if [[ -d "$BN_LOGS" ]]; then
+  use=$(disk_use_pct)
+  if [[ -n "$use" && "$use" -gt 85 ]]; then
+    log "disk ${use}% > 85%, truncating large active BirdNET logs"
+    for f in access.log actions.log application.log auth.log birdweather.log audio.log spectrogram.log weather.log; do
+      [[ -f "$BN_LOGS/$f" ]] && truncate -s 0 "$BN_LOGS/$f" 2>/dev/null || true
+    done
+  fi
+fi
+
+# 1c) Если диск >85%: удалить самый старый месяц клипов (clips/YYYY/MM).
+if [[ -d "$BN_CLIPS" ]]; then
+  use=$(disk_use_pct)
+  if [[ -n "$use" && "$use" -gt 85 ]]; then
+    oldest=$(find "$BN_CLIPS" -mindepth 2 -maxdepth 2 -type d 2>/dev/null | sort | head -1)
+    if [[ -n "$oldest" && "$oldest" != "$BN_CLIPS" ]]; then
+      sz=$(du -sh "$oldest" 2>/dev/null | cut -f1)
+      log "disk ${use}% > 85%, removing oldest clip month: $oldest ($sz)"
+      rm -rf "$oldest"
+    fi
+  fi
 fi
 
 # 2) Старые дневные метрики пайплайна (JSON по дням), старше 90 дней.

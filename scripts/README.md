@@ -140,7 +140,7 @@ bash scripts/install_metrics_service.sh
 
 ### weekly_disk_cleanup.sh
 
-Еженедельная очистка только «реального мусора»: ротированные логи BirdNET-Go (в имени есть дата `YYYY-MM-DD` и файлу **старше 14 дней**), старые JSON метрик пайплайна (**90+ дней**), сжатие **journald** (оставить ~30 дней), `apt-get clean`, `docker image prune` (только висячие образы). **Клипы и текущие `access.log` / `application.log` не трогает.**
+Еженедельная очистка: ротированные логи BirdNET (14+ дней), метрики пайплайна (90+ дней), journald, apt, docker prune. **При заполнении диска >85%** дополнительно обнуляет крупные активные логи BirdNET и удаляет **самый старый месяц** в `clips/YYYY/MM`. Текущие клипы за последние месяцы не трогает, пока диск ниже порога.
 
 ```bash
 sudo cp scripts/weekly_disk_cleanup.sh /usr/local/bin/weekly_disk_cleanup.sh
